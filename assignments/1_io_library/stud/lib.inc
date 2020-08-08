@@ -1,10 +1,19 @@
 section .text
 
-string_length:
-    xor rax, rax
-    ret
+string_length:			;unsigned long string_length(char *rdi:string)
+				;{
+    xor rax, rax		;	rax ^= rax(rax = 0);
+.loop_begin:			;	while(1)
+				;	{
+    cmp byte[rdi + rax], 0x00	;		if(!*rdi:string)break;
+    je .loop_end		;
+    inc rax			;		rax++;
+    jmp .loop_begin		;
+.loop_end:			;	}
+    ret				;	return rax;
+				;}
 
-print_string:
+print_string:			;unsigned long:(num of written bytes) print_string(char *rdi:string)
     xor rax, rax
     ret
 
