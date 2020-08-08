@@ -4,4 +4,7 @@ print_string.o
 string_length
 string_length.asm
 string_length.o
+string_copy
+string_copy.asm
+string_copy.o
 

@@ -13,9 +13,17 @@ string_length:			;unsigned long string_length(char *rdi:string)
     ret				;	return rax;
 				;}
 
-print_string:			;unsigned long:(num of written bytes) print_string(char *rdi:string)
-    xor rax, rax
-    ret
+print_string:			;unsigned long:(num of written bytes) print_string(char *rdi:string)//print string to stdout
+				;{
+    push rdi			;	*(rsp -= 8) = rdi:string;
+    call string_length		;	rax = string_length(rdi:string);
+    mov rdx, rax		;	rdx = rax:string_length(string);
+    mov rax, 1			;	rax = 1:(write syscall);
+    mov rdi, 1			;	rdi = 1:stdout;
+    pop rsi			;	rsp += 8; rsi = (*rsp):string;
+    syscall			;	rax = write(rdi:stdout, rsi:string, rdx:string_length(string)):(num of written bytes);
+    ret				;	return rax:(num of written bytes);
+				;}
 
 
 print_char:
