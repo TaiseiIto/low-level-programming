@@ -100,6 +100,7 @@ string_copy:			;char *string_copy(char *rdi:source, char *rsi:destination, unsig
     add rsi, 2			;		rsi += 2:(word);
     sub rdx, 2			;		rdx -= 2:(word);
     jz .loop_end		;		if(rdx == 0)goto .loop_end;
+    jmp .loop_begin		;		else goto .loop_begin;
 .copy_dword:			;.copy_dword://4 <= rdx
     mov eax, dword[rdi]		;		eax = *rdi;
     mov dword[rsi], eax		;		*rsi = eax;
@@ -107,6 +108,7 @@ string_copy:			;char *string_copy(char *rdi:source, char *rsi:destination, unsig
     add rsi, 4			;		rsi += 4:(dword);
     sub rdx, 4			;		rdx -= 4:(dword);
     jz .loop_end		;		if(rdx == 0)goto .loop_end;
+    jmp .loop_begin		;		else goto .loop_begin;
 .copy_qword:			;.copy_qword://8 <= rdx
     mov rax, qword[rdi]		;		rax = *rdi;
     mov qword[rsi], rax		;		*rsi = rax;
@@ -114,6 +116,7 @@ string_copy:			;char *string_copy(char *rdi:source, char *rsi:destination, unsig
     add rsi, 8			;		rsi += 8:(qword);
     sub rdx, 8			;		rdx -= 8:(qword);
     jz .loop_end		;		if(rdx == 0)goto .loop_end;
+    jmp .loop_begin		;		else goto .loop_begin;
 .loop_end:			;	}
     pop rax			;	rsp += 8; rax = (*rsp):destination;
     ret				;	return rax:destication;

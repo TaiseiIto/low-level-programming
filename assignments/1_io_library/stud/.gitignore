@@ -7,4 +7,9 @@ string_length.o
 string_copy
 string_copy.asm
 string_copy.o
-
+print_char
+print_char.asm
+print_char.o
+print_uint
+print_uint.asm
+print_uint.o
