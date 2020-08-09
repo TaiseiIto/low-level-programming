@@ -1,4 +1,5 @@
-char_0 equ 0x30
+char_minus equ 0x2d
+char_zero equ 0x30
 stdout equ 1
 syscall_write equ 1
 section .text
@@ -23,7 +24,7 @@ print_string:			;unsigned long:(num of written bytes) print_string(char *rdi:str
     mov rdx, rax		;	rdx = rax:string_length(string);
     mov rax, syscall_write	;	rax = syscall_write;
     mov rdi, stdout		;	rdi = stdout;
-    pop rsi			;	rsp += 8; rsi = (*rsp):string;
+    pop rsi			;	rsi = (*rsp):string; rsp += 8;
     syscall			;	rax = write(rdi:stdout, rsi:string, rdx:string_length(string)):(num of written bytes);
     ret				;	return rax:(num of written bytes);
 				;}
@@ -36,7 +37,7 @@ print_char:			;unsigned long:(num of written bytes):1 print_char(char rdi:charac
     mov rsi, rsp		;	rsi = rsp:&character;
     mov rdx, 1			;	rdx = 1:(num of written bytes);
     syscall			;	rax = write(rdi:stdout, rsi:&character, rdx:1:(num of written bytes)):(num of written bytes);
-    pop rdi			;	rsp += 8; rdi = (*rsp):character;
+    pop rdi			;	rdi = (*rsp):character; rsp += 8;
     ret				;	return rax:(num of written bytes):1;
 				;}
 
@@ -45,7 +46,7 @@ print_newline:
     ret
 
 
-print_uint:			;void print_uint(unsigned long rdi:integer)//print integer by decimal system
+print_uint:			;void print_uint(unsigned long rdi:integer)//print unsigned integer by decimal system
 				;{
     push rbp			;	*(rsp -= 8) = rbp;
     mov rbp, rsp		;	rbp = rsp;
@@ -71,7 +72,7 @@ print_uint:			;void print_uint(unsigned long rdi:integer)//print integer by deci
 .print_1_digit:			;.print_1_digit:
     mov r10, r9			;	r10:(decimal digit) = r9;
     and r10, 0x000000000000000f	;	r10 &= 0x000000000000000f;
-    add r10, char_0		;	r10 += '0';
+    add r10, char_zero		;	r10 += '0';
     push r10			;	*(rsp -= 8) = r10;
     mov rax, syscall_write	;	rax = syscall_write;
     mov rdi, stdout		;	rdi = stdout;
@@ -79,26 +80,47 @@ print_uint:			;void print_uint(unsigned long rdi:integer)//print integer by deci
     mov rdx, 1			;	rdx = 1;
     push rcx			;	*(rsp -= 8) = rcx;//protect rcx from syscall
     syscall			;	rax = write(rdi:stdout, rsi:&(decimal digit), rdx:1);
-    pop rcx			;	rsp += 8; rcx = *rsp;//recover rcx
-    pop r10			;	rsp += 8; r10 = *rsp;
+    pop rcx			;	rcx = *rsp; rsp += 8;//recover rcx
+    pop r10			;	r10 = *rsp; rsp += 8;
     shr r9, 4			;	r9 >>= 4;
     sub rcx, 4			;	rcx -= 4;
     jmp .print			;	goto .print;
 .print_next_16_digits:		;.print_next_16_digits:
     cmp rbp, rsp		;	if(rbp == rsp)goto .end;
     je .end			;
-    pop r9			;	rsp += 8; r9 = *rsp;
+    pop r9			;	r9 = *rsp; rsp += 8;
     mov rcx, 64			;	rcx = 64;
     jmp .print_1_digit		;	goto .print_1_digit;
 .end:
-    pop rbp			;	rsp += 8; rbp = *rsp;
+    pop rbp			;	rbp = *rsp; rsp += 8;
     ret				;	return;
 				;}
 
 
-print_int:
-    xor rax, rax
-    ret
+print_int:			;void print_int(long rdi:integer)//print integer by decimal system
+				;{
+    push rbp			;	*(rsp -= 8) = rbp;
+    mov rbp, rsp		;	rbp = rsp;
+    mov rax, 1			;	if(rdi:integer < 0)goto .positive
+    shl rax, 63			;
+    test rdi, rax		;
+    jz .positive
+    mov rax, char_minus		;	rax = '-';
+    push rdi			;	*(rsp -= 8) = rdi:integer;
+    push rax			;	*(rsp -= 8) = rax;
+    mov rax, syscall_write	;	rax = syscall_write;
+    mov rdi, stdout		;	rdi = stdout;
+    mov rsi, rsp		;	rsi = rsp:"-";
+    mov rdx, 1			;	rdx = 1;
+    syscall			;	rax = write(rdi:stdout, rsi:"-", rdx:1):1;
+    pop rax			;	rax = *rsp:'-'; rsp += 8;
+    pop rdi			;	rdi = *rsp:integer; rsp += 8;
+    neg rdi			;	rdi *= -1;
+.positive:			;.positive:
+    call print_uint		;	print_uint(rdi:(unsigned integer));
+    pop rbp			;	rbp = *rsp; rsp += 8;
+    ret				;	return;
+				;}
 
 string_equals:
     xor rax, rax
@@ -165,6 +187,6 @@ string_copy:			;char *string_copy(char *rdi:source, char *rsi:destination, unsig
     jz .loop_end		;		if(rdx == 0)goto .loop_end;
     jmp .loop_begin		;		else goto .loop_begin;
 .loop_end:			;	}
-    pop rax			;	rsp += 8; rax = (*rsp):destination;
+    pop rax			;	rax = (*rsp):destination; rsp += 8;
     ret				;	return rax:destication;
 				;}

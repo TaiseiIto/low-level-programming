@@ -13,3 +13,10 @@ print_char.o
 print_uint
 print_uint.asm
 print_uint.o
+print_int
+print_int.asm
+print_int.o
+read_char
+read_char.asm
+read_char.o
+
