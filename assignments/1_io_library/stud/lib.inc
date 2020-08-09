@@ -160,6 +160,9 @@ read_char:			;char read_char(void)//read char from stdin
     ret 			;	return rax;
 				;}
 
+				;テストが通らない
+				;read_wordを実行してCtrl-Dを入力したときの挙動が異なる
+				;test.pyではread syscallでrax=-1エラーが起きている
 read_word:			;char *read_word(char *rdi:buf, unsigned long rsi:sz):(if success, buf. else NULL),rdx:(length of word)//read word consisting of char except ' ', '\t', '\a' and CR
 				;{
     push rbp			;	*(rsp -= 8) = rbp;
