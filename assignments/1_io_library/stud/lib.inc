@@ -137,6 +137,17 @@ string_equals:
 
 read_char:			;char read_char(void)//read char from stdin
 				;{
+    push rbp			;	*(rsp -= 8) = rbp;
+    mov rbp, rsp		;	rbp = rsp;
+    xor rax, rax		;	rax = 0;
+    push rax			;	*(rsp -= 8) = rax:0;
+    mov rax, syscall_read	;	rax = syscall_read;
+    mov rdi, stdin		;	rdi = stdin;
+    mov rsi, rsp		;	rsi = rsp:"";
+    mov rdx, 1			;	rdx = 1;
+    syscall			;	rax = read(rdi:stdin, rsi:rsp:"", rdx:1):(num of read bytes);
+    pop rax			;	rax = *rsp; rsp += 8;
+    pop rbp			;	rbp = *rsp; rsp += 8;
     ret 			;	return rax;
 				;}
 

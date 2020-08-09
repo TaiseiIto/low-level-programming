@@ -19,4 +19,7 @@ print_int.o
 read_char
 read_char.asm
 read_char.o
+read_word
+read_word.asm
+read_word.o
 
