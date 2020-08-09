@@ -181,8 +181,8 @@ read_word:			;char *read_word(char *rdi:buf, unsigned long rsi:sz):(if success, 
     je .whitespace		;
     cmp byte[rsi], char_new_line;	if(*rsi == '\n')goto .whitespace;
     je .whitespace		;
-    cmp byte[rsi], char_null	;	if(*rsi == '\0')goto .whitespace;
-    je .whitespace		;
+    cmp byte[rsi], char_null	;	if(*rsi == '\0')goto .success;
+    je .success			;
     cmp byte[rsi], char_space	;	if(*rsi == ' ')goto .whitespace;
     je .whitespace		;
     cmp byte[rsi], char_tab	;	if(*rsi == '\t')goto .whitespace;
