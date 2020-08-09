@@ -41,10 +41,10 @@ read_word:			;char *read_word(char *rdi:buf, unsigned long rsi:sz):(if success, 
     cmp byte[rsi], char_new_line;	if(*rsi == '\n')goto .success;
     je .success			;
     cmp byte[rsi], char_carriage_return;if(*rsi == 0x0d)goto .success;
+    je .success			;
     inc rcx			;	rcx:(num of read bytes)++;
     inc rsi			;	rsi:(buf + rcx)++;
     jmp .read			;	goto .read;
-    je .success			;
 .success:			;.success:
     mov byte[rsi], 0		;	*rsi = '\0';
     mov rax, r8			;	rax = r8:buf;
