@@ -24,7 +24,6 @@ read_word:			;char *read_word(char *rdi:buf, unsigned long rsi:sz):(if success, 
     jz .error			;
     dec r9			;	r9--;//r9 = max strlen
     xor rcx, rcx		;	rcx:(num of read bytes) = 0;
-    mov rax, syscall_read	;	rax = syscall_read;
     mov rdi, stdin		;	rdi = stdin;
     mov rsi, r8			;	rsi = r8:buf;
     mov rdx, 1			;	rdx = 1;
@@ -32,6 +31,7 @@ read_word:			;char *read_word(char *rdi:buf, unsigned long rsi:sz):(if success, 
     cmp rcx, r9			;	if(rcx:(num of read bytes) == r9:(max strlen))goto .error;
     je .error			;
     push rcx			;	*(rsp -= 8) = rcx;//protect rcx from syscall
+    mov rax, syscall_read	;	rax = syscall_read;
     syscall			;	rax = read(rdi:stdin, rsi:(buf + rcx), rdx:1):(num of read bytes);
     pop rcx			;	rcx = *rsp; rsp += 8;//recover rcx
     cmp byte[rsi], char_space	;	if(*rsi == ' ')goto .success;
