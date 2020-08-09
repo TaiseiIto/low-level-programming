@@ -8,6 +8,7 @@ stdin equ 0
 stdout equ 1
 syscall_read equ 0
 syscall_write equ 1
+
 section .text
 
 string_length:			;unsigned long string_length(char *rdi:string)
