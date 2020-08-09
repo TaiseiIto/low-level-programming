@@ -57,6 +57,8 @@ print_uint:			;void print_uint(unsigned long rdi:integer)//print integer by deci
 
 _start:				;int main(void)
 				;{
+    mov rdi, 12345		;	print_uint(12345);
+    call print_uint		;
     mov rax, syscall_exit	;	exit(0);
     mov rdi, 0			;
     syscall			;
