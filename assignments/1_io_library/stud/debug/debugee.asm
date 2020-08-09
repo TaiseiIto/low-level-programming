@@ -35,19 +35,24 @@ read_word:			;char *read_word(char *rdi:buf, unsigned long rsi:sz):(if success, 
     mov rax, syscall_read	;	rax = syscall_read;
     syscall			;	rax = read(rdi:stdin, rsi:(buf + rcx), rdx:1):(num of read bytes);
     pop rcx			;	rcx = *rsp; rsp += 8;//recover rcx
-    cmp byte[rsi], char_carriage_return;if(*rsi == 0x0d)goto .success;
-    je .success			;
-    cmp byte[rsi], char_new_line;	if(*rsi == '\n')goto .success;
-    je .success			;
-    cmp byte[rsi], char_null	;	if(*rsi == '\0')goto .success;
-    je .success			;
-    cmp byte[rsi], char_space	;	if(*rsi == ' ')goto .success;
-    je .success			;
-    cmp byte[rsi], char_tab	;	if(*rsi == '\t')goto .success;
-    je .success			;
+    cmp byte[rsi], char_carriage_return;if(*rsi == 0x0d)goto .whitespace;
+    je .whitespace		;
+    cmp byte[rsi], char_new_line;	if(*rsi == '\n')goto .whitespace;
+    je .whitespace		;
+    cmp byte[rsi], char_null	;	if(*rsi == '\0')goto .whitespace;
+    je .whitespace		;
+    cmp byte[rsi], char_space	;	if(*rsi == ' ')goto .whitespace;
+    je .whitespace		;
+    cmp byte[rsi], char_tab	;	if(*rsi == '\t')goto .whitespace;
+    je .whitespace		;
+.next_read:			;.next_read:
     inc rcx			;	rcx:(num of read bytes)++;
     inc rsi			;	rsi:(buf + rcx)++;
     jmp .read			;	goto .read;
+.whitespace:			;.whitespace:
+    test rcx, rcx		;	if(rcx != 0)goto .success;
+    jnz .success		;
+    jmp .next_read		;	else goto .next_read;
 .success:			;.success:
     mov byte[rsi], 0		;	*rsi = '\0';
     mov rax, r8			;	rax = r8:buf;
