@@ -4,6 +4,7 @@ char_carriage_return equ 0x0d
 char_minus equ 0x2d
 char_new_line equ 0x0a
 char_space equ 0x20
+char_null equ 0x00
 char_tab equ 0x09
 char_zero equ 0x30
 stdin equ 0
@@ -34,13 +35,15 @@ read_word:			;char *read_word(char *rdi:buf, unsigned long rsi:sz):(if success, 
     mov rax, syscall_read	;	rax = syscall_read;
     syscall			;	rax = read(rdi:stdin, rsi:(buf + rcx), rdx:1):(num of read bytes);
     pop rcx			;	rcx = *rsp; rsp += 8;//recover rcx
-    cmp byte[rsi], char_space	;	if(*rsi == ' ')goto .success;
-    je .success			;
-    cmp byte[rsi], char_tab	;	if(*rsi == '\t')goto .success;
+    cmp byte[rsi], char_carriage_return;if(*rsi == 0x0d)goto .success;
     je .success			;
     cmp byte[rsi], char_new_line;	if(*rsi == '\n')goto .success;
     je .success			;
-    cmp byte[rsi], char_carriage_return;if(*rsi == 0x0d)goto .success;
+    cmp byte[rsi], char_null	;	if(*rsi == '\0')goto .success;
+    je .success			;
+    cmp byte[rsi], char_space	;	if(*rsi == ' ')goto .success;
+    je .success			;
+    cmp byte[rsi], char_tab	;	if(*rsi == '\t')goto .success;
     je .success			;
     inc rcx			;	rcx:(num of read bytes)++;
     inc rsi			;	rsi:(buf + rcx)++;
