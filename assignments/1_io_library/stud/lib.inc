@@ -1,6 +1,8 @@
 char_minus equ 0x2d
 char_zero equ 0x30
+stdin equ 0
 stdout equ 1
+syscall_read equ 0
 syscall_write equ 1
 section .text
 
@@ -19,6 +21,8 @@ string_length:			;unsigned long string_length(char *rdi:string)
 
 print_string:			;unsigned long:(num of written bytes) print_string(char *rdi:string)//print string to stdout
 				;{
+    push rbp			;	*(rsp -= 8) = rbp;
+    mov rbp, rsp		;	rbp = rsp;
     push rdi			;	*(rsp -= 8) = rdi:string;
     call string_length		;	rax = string_length(rdi:string);
     mov rdx, rax		;	rdx = rax:string_length(string);
@@ -26,11 +30,14 @@ print_string:			;unsigned long:(num of written bytes) print_string(char *rdi:str
     mov rdi, stdout		;	rdi = stdout;
     pop rsi			;	rsi = (*rsp):string; rsp += 8;
     syscall			;	rax = write(rdi:stdout, rsi:string, rdx:string_length(string)):(num of written bytes);
+    pop rbp			;	rbp = *rsp; rsp += 8;
     ret				;	return rax:(num of written bytes);
 				;}
 
 print_char:			;unsigned long:(num of written bytes):1 print_char(char rdi:character)//print char to stdout
 				;{
+    push rbp			;	*(rsp -= 8) = rbp;
+    mov rbp, rsp		;	rbp = rsp;
     push rdi			;	*(rsp -= 8) = rdi:character;
     mov rax, syscall_write	;	rax = syscall_write;
     mov rdi, stdout		;	rdi = stdout;
@@ -38,6 +45,7 @@ print_char:			;unsigned long:(num of written bytes):1 print_char(char rdi:charac
     mov rdx, 1			;	rdx = 1:(num of written bytes);
     syscall			;	rax = write(rdi:stdout, rsi:&character, rdx:1:(num of written bytes)):(num of written bytes);
     pop rdi			;	rdi = (*rsp):character; rsp += 8;
+    pop rbp			;	rbp = *rsp; rsp += 8;
     ret				;	return rax:(num of written bytes):1;
 				;}
 
@@ -53,7 +61,7 @@ print_uint:			;void print_uint(unsigned long rdi:integer)//print unsigned intege
     mov rax, rdi		;	rax = rdi:integer;
     mov r8, 10			;	r8:divisor = 10;
 .division_16_digits:		;.division_16_digits:
-    mov rcx, 0			;	rcx:(num of stored r9:(16 decimal digits) bits) = 0;
+    xor rcx, rcx		;	rcx:(num of stored r9:(16 decimal digits) bits) = 0;
 .division_1_digit:		;.division_1_digit:
     xor rdx, rdx		;	(rdx ^= rdx):(rdx = 0);
     div r8			;	rdx = rax:rdi % r8:10; rax = rax:rdi / r8:10;
@@ -127,9 +135,10 @@ string_equals:
     ret
 
 
-read_char:
-    xor rax, rax
-    ret 
+read_char:			;char read_char(void)//read char from stdin
+				;{
+    ret 			;	return rax;
+				;}
 
 read_word:
     ret
