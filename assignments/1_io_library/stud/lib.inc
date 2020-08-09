@@ -201,7 +201,6 @@ read_word:			;char *read_word(char *rdi:buf, unsigned long rsi:sz):(if success, 
     jmp .end			;	goto .end;
 .error:				;.error:
     mov rax, 0			;	rax = NULL;
-    jmp .end			;	goto .end;
 .end:
     pop rbp			;	rbp = *rsp; rsp += 8;
     ret				;	return rax:buf, rdx:(length of word);
