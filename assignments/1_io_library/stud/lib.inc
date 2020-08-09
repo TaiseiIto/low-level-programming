@@ -68,7 +68,7 @@ print_uint:			;void print_uint(unsigned long rdi:integer)//print integer by deci
 .print:				;.print
     test rcx, rcx		;	if(rcx == 0)goto .print_next_16_digits;
     jz .print_next_16_digits	;
-.print_1_digit			;.print_1_digit:
+.print_1_digit:			;.print_1_digit:
     mov r10, r9			;	r10:(decimal digit) = r9;
     and r10, 0x000000000000000f	;	r10 &= 0x000000000000000f;
     add r10, char_0		;	r10 += '0';
