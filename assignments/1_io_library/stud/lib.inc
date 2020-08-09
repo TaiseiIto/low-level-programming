@@ -183,8 +183,8 @@ read_word:			;char *read_word(char *rdi:buf, unsigned long rsi:sz):(if success, 
     mov rax, syscall_read	;	rax = syscall_read;
     syscall			;	rax = read(rdi:stdin, rsi:(buf + rcx), rdx:1):(num of read bytes);
     pop rcx			;	rcx = *rsp; rsp += 8;//recover rcx
-    cmp rax, -1
-    je .debug
+    test rax, rax		;	if(!rax:(num of read bytes))goto .success;
+    jz .success
     cmp byte[rsi], char_carriage_return;if(*rsi == 0x0d)goto .whitespace;
     je .whitespace		;
     cmp byte[rsi], char_new_line;	if(*rsi == '\n')goto .whitespace;
@@ -209,8 +209,6 @@ read_word:			;char *read_word(char *rdi:buf, unsigned long rsi:sz):(if success, 
     jmp .end			;	goto .end;
 .error:				;.error:
     mov rax, 0			;	rax = NULL;
-.debug
-    mov rax, error_message
 .end:				;.end:
     pop rbp			;	rbp = *rsp; rsp += 8;
     ret				;	return rax:buf, rdx:(length of word);
