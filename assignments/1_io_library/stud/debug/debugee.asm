@@ -39,7 +39,9 @@ print_uint:			;void print_uint(unsigned long rdi:integer)//print integer by deci
     mov rdi, stdout		;	rdi = stdout;
     mov rsi, rsp		;	rsi = rsp;
     mov rdx, 1			;	rdx = 1;
+    push rcx			;	*(rsp -= 8) = rcx;//protect rcx from syscall
     syscall			;	rax = write(rdi:stdout, rsi:&(decimal digit), rdx:1);
+    pop rcx			;	rsp += 8; rcx = *rsp;//recover rcx
     pop r10			;	rsp += 8; r10 = *rsp;
     shr r9, 4			;	r9 >>= 4;
     sub rcx, 4			;	rcx -= 4;
