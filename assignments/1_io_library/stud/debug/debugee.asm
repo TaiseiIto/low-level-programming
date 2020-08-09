@@ -45,14 +45,13 @@ read_word:			;char *read_word(char *rdi:buf, unsigned long rsi:sz):(if success, 
     je .whitespace		;
     cmp byte[rsi], char_tab	;	if(*rsi == '\t')goto .whitespace;
     je .whitespace		;
-.next_read:			;.next_read:
     inc rcx			;	rcx:(num of read bytes)++;
     inc rsi			;	rsi:(buf + rcx)++;
     jmp .read			;	goto .read;
 .whitespace:			;.whitespace:
     test rcx, rcx		;	if(rcx != 0)goto .success;
     jnz .success		;
-    jmp .next_read		;	else goto .next_read;
+    jmp .read			;	else goto .read;
 .success:			;.success:
     mov byte[rsi], 0		;	*rsi = '\0';
     mov rax, r8			;	rax = r8:buf;
