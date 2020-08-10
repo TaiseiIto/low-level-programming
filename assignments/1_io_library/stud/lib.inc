@@ -225,13 +225,16 @@ parse_uint:			;{unsigned long rax:(parsed num), unsigned long rdx:(parsed string
     inc rcx			;	rcx:(parse rcx byte of r8)++;
     inc rdx			;	rdx:(parsed string length)++;
     cmp rcx, 8			;	if(rcx:(parse rcx byte of r8) == 8)goto .parse_8_digits;
-    je .parse_8_digits
+    je .parse_next_8_digits
     sar r8, 8			;	r8 >>= 8;
     jmp .parse_1_digit		;	goto .parse_1_digit;
-.too_big:
+.too_big:			;.too_big:
     xor rax, rax		;	(rax:(parsed num) ^= rax):(rax = 0);
     xor rdx, rdx		;	(rdx:(parsed string length) ^= rdx):(rdx = 0);
     ret				;	return {unsigned long rax:(parsed num):0, unsigned long rdx:(parsed string length):0};
+.parse_next_8_digits:		;.parse_next_8_digits:
+    add rdi, 8			;	rdi:(string address) += 8;
+    jmp .parse_8_digits		;	goto .parse_8_digits;
 .end:
     ret				;	return {unsigned long rax:(parsed num), unsigned long rdx:(parsed string length)};
 				;}
