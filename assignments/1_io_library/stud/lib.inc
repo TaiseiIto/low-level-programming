@@ -64,6 +64,8 @@ print_uint:			;void print_uint(unsigned long rdi:integer)//print unsigned intege
     mov rax, rdi		;	rax = rdi:integer;
     mov r8, 10			;	r8:divisor = 10;
     xor r9, r9			;	r9:(8 decimal digits) = 0;
+    test rax, rax		;	if(rax:integer == 0)goto .print_zero;
+    jz .print_zero;
     mov rcx, 1			;	rcx:(num of stored r9:(8 decimal digits) bytes) = 1;
 .division_begin:		;.division_begin:
     test rax, rax		;	if(rax == 0)goto .division_end;
@@ -79,7 +81,7 @@ print_uint:			;void print_uint(unsigned long rdi:integer)//print unsigned intege
     push r9			;	*(rsp -= 8) = r9:(8 decimal digits);
     xor rcx, rcx		;	rcx = 0;
     jmp .division_begin		;	goto .division_begin;
-.division_end:				;.print:
+.division_end:			;.division_end:
     xor rax, rax		;	rax = 0;
     test rcx, rcx		;	if(!rcx)goto .print;
     jz .print			;
@@ -98,6 +100,11 @@ print_uint:			;void print_uint(unsigned long rdi:integer)//print unsigned intege
     call print_string		;	print_string(rdi:(address of decimal string));
     leave			;	rsp = rbp; rbp = *rsp; rsp -= 8;
     ret				;	return;
+.print_zero:			;.print_zero:
+    mov r9b, char_zero		;	r9b = '0';
+    mov rax, 7			;	rax = 7;
+    mov rdx, rax		;	rdx = rax:7;
+    jmp .shift_last_8_decimal_digits;	goto .shift_last_8_decimal_digits;
 				;}
 
 
