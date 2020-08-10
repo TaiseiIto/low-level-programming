@@ -246,14 +246,14 @@ parse_int:			;{long rax:(parsed num), unsigned long rdx:(parsed string length)} 
     cmp byte[rdi], char_minus	;	if(*rdi == '-')goto .minus;
     je .minus
     call parse_uint		;	{rax, rdx} = parse_uint(rdi:string);
-    mov r8, -1			;	r8 = -1;//check range
+    mov r8, 0x8000000000000000	;	r8 = -1;//check range
     test rax, r8		;	if(rax < 0)goto .error;
     jnz .error
     jmp .end			;	else goto .end;
 .minus:				;.minus:
     inc rdi			;	rdi:string++;//skip '-'
     call parse_uint		;	{rax, rdx} = parse_uint(rdi:(abs part string));
-    mov r8, -1			;	r8 = -1;//check range
+    mov r8, 0x8000000000000000	;	r8 = -1;//check range
     cmp rax, r8			;	if(0x8000000000000000 rax)goto .error;
     ja .error
     neg rax			;	rax:(parsed num) *= -1;
