@@ -361,6 +361,7 @@ string_copy:			;char *string_copy(char *rdi:source, char *rsi:destination, unsig
     pop rax			;	rax = (*rsp):destination; rsp += 8;
     ret				;	return rax:destication;
 .error:				;.error:
+    pop rdi			;	rdi = (*rsp):destication; rsp += 8;
     xor rax, rax		;	(rax ^= rax):(rax = NULL);
     ret				;	return rax:NULL;
 				;}
