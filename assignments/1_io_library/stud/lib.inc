@@ -17,6 +17,12 @@ error_message: db 'ERROR!', 0x00
 
 section .text
 
+exit:				;long exit(long rdi:exit_code)
+				;{
+    mov rax, syscall_exit	;	exit(rdi:exit_code);
+    syscall
+				;}
+
 string_length:			;unsigned long string_length(char *rdi:string)
 				;{
     xor rax, rax		;	(rax ^= rax):(rax = 0);
@@ -54,10 +60,11 @@ print_char:			;unsigned long:(num of written bytes):1 print_char(char rdi:charac
     ret				;	return rax:(num of written bytes):1;
 				;}
 
-print_newline:
-    xor rax, rax
-    ret
-
+print_newline:			;unsigned long:(num of written bytes):1 print_newline(void)//print '\n' to stdout
+				;{
+    mov rdi, char_new_line	;	rdi = '\n';
+    jmp print_char		;	return print_char(rdi:'\n');
+				;}
 
 print_int:			;void print_int(long rdi:integer)//print integer by decimal system
 				;{
