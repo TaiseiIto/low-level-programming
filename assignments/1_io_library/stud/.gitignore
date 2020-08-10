@@ -31,3 +31,6 @@ read_word_length.o
 read_word_too_long
 read_word_too_long.asm
 read_word_too_long.o
+parse_int
+parse_int.asm
+parse_int.o
