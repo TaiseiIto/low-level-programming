@@ -7,6 +7,7 @@ char_tab equ 0x09
 char_zero equ 0x30
 stdin equ 0
 stdout equ 1
+syscall_exit equ 60
 syscall_read equ 0
 syscall_write equ 1
 
