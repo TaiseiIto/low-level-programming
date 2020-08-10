@@ -63,47 +63,40 @@ print_uint:			;void print_uint(unsigned long rdi:integer)//print unsigned intege
     mov rbp, rsp		;	rbp = rsp;
     mov rax, rdi		;	rax = rdi:integer;
     mov r8, 10			;	r8:divisor = 10;
-.division_16_digits:		;.division_16_digits:
-    xor rcx, rcx		;	rcx:(num of stored r9:(16 decimal digits) bits) = 0;
-.division_1_digit:		;.division_1_digit:
+    xor r9, r9			;	r9:(8 decimal digits) = 0;
+    mov rcx, 1			;	rcx:(num of stored r9:(8 decimal digits) bytes) = 1;
+.division_begin:		;.division_begin:
+    test rax, rax		;	if(rax == 0)goto .division_end;
+    jz .division_end		;
     xor rdx, rdx		;	(rdx ^= rdx):(rdx = 0);
     div r8			;	rdx = rax:rdi % r8:10; rax = rax:rdi / r8:10;
-    shl r9, 4			;	r9 <<= 4;
+    shl r9, 8			;	r9 <<= 8;
     add r9b, dl			;	r9 += rdx:remainder;
-    add rcx, 4			;	rcx += 4;
-    test rax, rax		;	if(rax == 0)goto .print;
+    add r9b, char_zero		;	r9 += '0';
+    inc rcx			;	rcx++;
+    cmp rcx, 8			;	if(rcx != 8)goto .division_begin;
+    jne .division_begin		;
+    push r9			;	*(rsp -= 8) = r9:(8 decimal digits);
+    xor rcx, rcx		;	rcx = 0;
+    jmp .division_begin		;	goto .division_begin;
+.division_end:				;.print:
+    xor rax, rax		;	rax = 0;
+    test rcx, rcx		;	if(!rcx)goto .print;
     jz .print			;
-    cmp rcx, 64			;	if(rcx != 64)goto .division_1_digit;
-    jne .division_1_digit	;
-    push r9			;	*(rsp -= 8) = r9:(16 decimal digits);
-    jmp .division_16_digits	;	goto .division_16_digits;
+    mov rax, 8			;	rax = 8;
+    sub rax, rcx		;	(rax -= rcx):(rax = 8 - rcx);
+    mov rdx, rax		;	rdx = rax:(8 - rcx);
+    shl rdx, 3			;	(rdx <<= 3):(rdx = 8 * (8 - rcx));
+.shift_last_8_decimal_digits:	;.shift_last_8_decimal_digits
+    sal r9, 1			;	r9 <<= rdx:(8 * (8 - rcx));
+    dec rdx			;
+    jnz .shift_last_8_decimal_digits;
+    push r9			;	*(rsp -= 8) = r9:(rcx decimal digits);
 .print:				;.print
-    test rcx, rcx		;	if(rcx == 0)goto .print_next_16_digits;
-    jz .print_next_16_digits	;
-.print_1_digit:			;.print_1_digit:
-    mov r10, r9			;	r10:(decimal digit) = r9;
-    and r10, 0x000000000000000f	;	r10 &= 0x000000000000000f;
-    add r10, char_zero		;	r10 += '0';
-    push r10			;	*(rsp -= 8) = r10;
-    mov rax, syscall_write	;	rax = syscall_write;
-    mov rdi, stdout		;	rdi = stdout;
-    mov rsi, rsp		;	rsi = rsp;
-    mov rdx, 1			;	rdx = 1;
-    push rcx			;	*(rsp -= 8) = rcx;//protect rcx from syscall
-    syscall			;	rax = write(rdi:stdout, rsi:&(decimal digit), rdx:1);
-    pop rcx			;	rcx = *rsp; rsp += 8;//recover rcx
-    pop r10			;	r10 = *rsp; rsp += 8;
-    shr r9, 4			;	r9 >>= 4;
-    sub rcx, 4			;	rcx -= 4;
-    jmp .print			;	goto .print;
-.print_next_16_digits:		;.print_next_16_digits:
-    cmp rbp, rsp		;	if(rbp == rsp)goto .end;
-    je .end			;
-    pop r9			;	r9 = *rsp; rsp += 8;
-    mov rcx, 64			;	rcx = 64;
-    jmp .print_1_digit		;	goto .print_1_digit;
-.end:
-    pop rbp			;	rbp = *rsp; rsp += 8;
+    mov rdi, rsp		;	rdi = rsp;
+    add rdi, rax		;	(rdi += rax):(rdi = address of decimal string);
+    call print_string		;	print_string(rdi:(address of decimal string));
+    leave			;	rsp = rbp; rbp = *rsp; rsp -= 8;
     ret				;	return;
 				;}
 
