@@ -37,3 +37,6 @@ parse_int.o
 string_equals
 string_equals.asm
 string_equals.o
+string_equals not equals
+string_equals not equals.asm
+string_equals not equals.o
