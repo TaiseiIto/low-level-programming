@@ -129,8 +129,6 @@ print_uint:			;void print_uint(unsigned long rdi:integer)//print unsigned intege
 
 				;}//end of print_int
 
-
-
 string_equals:			;bool string_equals(char *rdi, char *rsi)
 				;{
 .compare_8_bytes:		;.compare_8_bytes:
@@ -156,7 +154,6 @@ string_equals:			;bool string_equals(char *rdi, char *rsi)
     xor rax, rax		;	(rax ^= rax):(rax = 0);
     ret				;	return rax:0;
 				;}
-
 
 read_char:			;char read_char(void)//read char from stdin
 				;{

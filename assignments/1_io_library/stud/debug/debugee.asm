@@ -16,82 +16,42 @@ global _start
 
 section .data
 
-input: db '-1dasda'
+str1: db 'ashdb asdhabs dahb', 0
+str2: db 'ashdb asdhabs dahb!!', 0
 
 section .text
 
-; rdi points to a string
-; returns rax: number, rdx : length
-parse_uint:			;{unsigned long rax:(parsed num), unsigned long rdx:(parsed string length)} parse_uint(char *rdi:string)
+string_equals:			;bool string_equals(char *rdi, char *rsi)
 				;{
-    xor rax, rax		;	(rax:(parsed num) ^= rax):(rax = 0);
-    xor rdx, rdx		;	(rdx:(parsed string length) ^= rdx):(rdx = 0);
-    mov r9, 10			;	r9 = 10;//decimal system
-    xor r10, r10		;	(r10:(parsed digit) ^= r10):(r10 = 0);
-.parse_8_digits:		;.parse_8_digits:
+.compare_8_bytes:		;.compare_8_bytes:
     mov r8, qword[rdi]		;	char r8[8] = *rdi;
-    xor rcx, rcx		;	(rcx:(parse rcx byte of r8) ^= rcx):(rcx = 0);
-.parse_1_digit:			;.parse_1_digits:
-    cmp r8b, char_zero		;	if(r8[0] < '0')goto .end;
-    jb .end
-    cmp r8b, char_nine		;	if('9' < r8[0])goto .end;
-    ja .end
-    push rdx			;	*(rsp -= 8) = rdx;//protect rdx from mul
-    mul r9			;	rdx:rax:(parsed num) = rax * r9:10;
-    test rdx, rdx		;	if(0 < rdx)goto .too_big;
-    jnz .too_big
-    pop rdx			;	rdx = *rsp; rsp += 8;//recover rdx
-    sub r8b, char_zero		;	r8[0] -= '0';//parsed digit
-    mov r10b, r8b		;	r10b = r8[0]:(parsed digit);
-    add rax, r10		;	rax:(parsed num) += r10:(parsed digit);
-    jc .too_big			;	if(carry_flag)goto .too_big;
-    inc rcx			;	rcx:(parse rcx byte of r8)++;
-    inc rdx			;	rdx:(parsed string length)++;
-    cmp rcx, 8			;	if(rcx:(parse rcx byte of r8) == 8)goto .parse_8_digits;
-    je .parse_next_8_digits
-    sar r8, 8			;	r8 >>= 8;
-    jmp .parse_1_digit		;	goto .parse_1_digit;
-.too_big:			;.too_big:
-    xor rax, rax		;	(rax:(parsed num) ^= rax):(rax = 0);
-    xor rdx, rdx		;	(rdx:(parsed string length) ^= rdx):(rdx = 0);
-    ret				;	return {unsigned long rax:(parsed num):0, unsigned long rdx:(parsed string length):0};
-.parse_next_8_digits:		;.parse_next_8_digits:
-    add rdi, 8			;	rdi:(string address) += 8;
-    jmp .parse_8_digits		;	goto .parse_8_digits;
-.end:
-    ret				;	return {unsigned long rax:(parsed num), unsigned long rdx:(parsed string length)};
+    mov r9, qword[rsi]		;	char r9[8] = *rsi;
+    xor rcx, rcx		;	(rcx ^= rcx):(rcx = 0);//num of compared bytes
+.compare_1_byte:		;.compare_1_byte:
+    cmp r8b, r9b		;	if(r8[0] != r9[0])goto .false;
+    jne .false
+    test r8b, 0			;	if(r8[0] == '\0')goto .true;
+    jz .true
+    inc rcx			;	rcx:(num of compared bytes)++;
+    cmp rcx, 8			;	if(rcx == 8)goto .compare_next_8_bytes;
+    je .compare_next_8_bytes
+.compare_next_8_bytes:		;.compare_next_8_bytes:
+    add rdi, 8			;	rdi += 8;
+    add rsi, 8			;	rsi += 8;
+    jmp .compare_8_bytes	;	goto .compare_8_bytes;
+.true:				;.true:
+    mov rax, 1			;	rax = 1;
+    ret				;	return rax:1;
+.false:				;.false:
+    xor rax, rax		;	(rax ^= rax):(rax = 0);
+    ret				;	return rax:0;
 				;}
 
-; rdi points to a string
-; returns rax: number, rdx : length
-parse_int:			;{long rax:(parsed num), unsigned long rdx:(parsed string length)} parse_int(char *rdi:string)
-				;{
-    cmp byte[rdi], char_minus	;	if(*rdi == '-')goto .minus;
-    je .minus
-    call parse_uint		;	{rax, rdx} = parse_uint(rdi:string);
-    mov r8, 0x8000000000000000	;	r8 = -1;//check range
-    test rax, r8		;	if(rax < 0)goto .error;
-    jnz .error
-    jmp .end			;	else goto .end;
-.minus:				;.minus:
-    inc rdi			;	rdi:string++;//skip '-'
-    call parse_uint		;	{rax, rdx} = parse_uint(rdi:(abs part string));
-    mov r8, 0x8000000000000000	;	r8 = -1;//check range
-    cmp rax, r8			;	if(0x8000000000000000 rax)goto .error;
-    ja .error
-    neg rax			;	rax:(parsed num) *= -1;
-    inc rdx			;	rdx:(parsed string length)++;
-.error:				;.error:
-    xor rax, rax		;	(rax:(parsed num) ^= rax):(rax = 0);
-    xor rdx, rdx		;	(rdx:(parsed string length) ^= rdx):(rdx = 0);
-    ret				;	return {long rax:(parsed num):0, unsigned long rdx:(parsed string length):0};
-.end:				;.end:
-    ret 			;	return {long rax:(parsed num), unsigned long rdx:(parsed string length)};
-				;}
 
 _start:
-    mov rdi, input
-    call parse_int
+    mov rdi, str1
+    mov rsi, str2
+    call string_equals
     mov rax, syscall_exit
     xor rdi, rdi
     syscall
