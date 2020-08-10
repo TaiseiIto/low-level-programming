@@ -30,8 +30,6 @@ string_length:			;unsigned long string_length(char *rdi:string)
 
 print_string:			;unsigned long:(num of written bytes) print_string(char *rdi:string)//print string to stdout
 				;{
-    push rbp			;	*(rsp -= 8) = rbp;
-    mov rbp, rsp		;	rbp = rsp;
     push rdi			;	*(rsp -= 8) = rdi:string;
     call string_length		;	rax = string_length(rdi:string);
     mov rdx, rax		;	rdx = rax:string_length(string);
@@ -39,14 +37,11 @@ print_string:			;unsigned long:(num of written bytes) print_string(char *rdi:str
     mov rdi, stdout		;	rdi = stdout;
     pop rsi			;	rsi = (*rsp):string; rsp += 8;
     syscall			;	rax = write(rdi:stdout, rsi:string, rdx:string_length(string)):(num of written bytes);
-    pop rbp			;	rbp = *rsp; rsp += 8;
     ret				;	return rax:(num of written bytes);
 				;}
 
 print_char:			;unsigned long:(num of written bytes):1 print_char(char rdi:character)//print char to stdout
 				;{
-    push rbp			;	*(rsp -= 8) = rbp;
-    mov rbp, rsp		;	rbp = rsp;
     push rdi			;	*(rsp -= 8) = rdi:character;
     mov rax, syscall_write	;	rax = syscall_write;
     mov rdi, stdout		;	rdi = stdout;
@@ -54,7 +49,6 @@ print_char:			;unsigned long:(num of written bytes):1 print_char(char rdi:charac
     mov rdx, 1			;	rdx = 1:(num of written bytes);
     syscall			;	rax = write(rdi:stdout, rsi:&character, rdx:1:(num of written bytes)):(num of written bytes);
     pop rdi			;	rdi = (*rsp):character; rsp += 8;
-    pop rbp			;	rbp = *rsp; rsp += 8;
     ret				;	return rax:(num of written bytes):1;
 				;}
 
@@ -116,8 +110,6 @@ print_uint:			;void print_uint(unsigned long rdi:integer)//print unsigned intege
 
 print_int:			;void print_int(long rdi:integer)//print integer by decimal system
 				;{
-    push rbp			;	*(rsp -= 8) = rbp;
-    mov rbp, rsp		;	rbp = rsp;
     mov rax, 1			;	if(rdi:integer < 0)goto .positive
     shl rax, 63			;
     test rdi, rax		;
@@ -135,7 +127,6 @@ print_int:			;void print_int(long rdi:integer)//print integer by decimal system
     neg rdi			;	rdi *= -1;
 .positive:			;.positive:
     call print_uint		;	print_uint(rdi:(unsigned integer));
-    pop rbp			;	rbp = *rsp; rsp += 8;
     ret				;	return;
 				;}
 
@@ -146,8 +137,6 @@ string_equals:
 
 read_char:			;char read_char(void)//read char from stdin
 				;{
-    push rbp			;	*(rsp -= 8) = rbp;
-    mov rbp, rsp		;	rbp = rsp;
     xor rax, rax		;	rax = 0;
     push rax			;	*(rsp -= 8) = rax:0;
     mov rax, syscall_read	;	rax = syscall_read;
@@ -156,14 +145,11 @@ read_char:			;char read_char(void)//read char from stdin
     mov rdx, 1			;	rdx = 1;
     syscall			;	rax = read(rdi:stdin, rsi:rsp:"", rdx:1):(num of read bytes);
     pop rax			;	rax = *rsp; rsp += 8;
-    pop rbp			;	rbp = *rsp; rsp += 8;
     ret 			;	return rax;
 				;}
 
 read_word:			;char *read_word(char *rdi:buf, unsigned long rsi:sz):(if success, buf. else NULL),rdx:(length of word)//read word consisting of char except ' ', '\t', '\a' and CR
 				;{
-    push rbp			;	*(rsp -= 8) = rbp;
-    mov rbp, rsp		;	rbp = rsp;
     mov r8, rdi			;	r8 = rdi:buf;
     mov r9, rsi			;	r9 = rsi:sz;
     test r9, r9			;	if(!r9)goto .error;
@@ -207,7 +193,6 @@ read_word:			;char *read_word(char *rdi:buf, unsigned long rsi:sz):(if success, 
 .error:				;.error:
     mov rax, 0			;	rax = NULL;
 .end:				;.end:
-    pop rbp			;	rbp = *rsp; rsp += 8;
     ret				;	return rax:buf, rdx:(length of word);
 				;}
 
