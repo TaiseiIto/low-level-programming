@@ -35,6 +35,9 @@ string_equals:			;bool string_equals(char *rdi, char *rsi)
     inc rcx			;	rcx:(num of compared bytes)++;
     cmp rcx, 8			;	if(rcx == 8)goto .compare_next_8_bytes;
     je .compare_next_8_bytes
+    shr r8, 8			;	r8 >>= 8;
+    shr r9, 8			;	r9 >>= 8;
+    jmp .compare_1_byte		;	goto .compare_1_byte;
 .compare_next_8_bytes:		;.compare_next_8_bytes:
     add rdi, 8			;	rdi += 8;
     add rsi, 8			;	rsi += 8;

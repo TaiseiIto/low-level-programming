@@ -40,3 +40,6 @@ string_equals.o
 string_equals not equals
 string_equals not equals.asm
 string_equals not equals.o
+string_copy_too_long
+string_copy_too_long.asm
+string_copy_too_long.o

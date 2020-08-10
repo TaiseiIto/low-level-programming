@@ -138,7 +138,7 @@ string_equals:			;bool string_equals(char *rdi, char *rsi)
 .compare_1_byte:		;.compare_1_byte:
     cmp r8b, r9b		;	if(r8[0] != r9[0])goto .false;
     jne .false
-    test r8b, 0			;	if(r8[0] == '\0')goto .true;
+    cmp r8b, 0			;	if(r8[0] == '\0')goto .true;
     jz .true
     inc rcx			;	rcx:(num of compared bytes)++;
     cmp rcx, 8			;	if(rcx == 8)goto .compare_next_8_bytes;
