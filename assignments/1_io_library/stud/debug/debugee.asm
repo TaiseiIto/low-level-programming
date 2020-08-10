@@ -91,6 +91,8 @@ print_uint:			;void print_uint(unsigned long rdi:integer)//print unsigned intege
 				;}
 
 _start:
+    xor rdi, rdi
+    call print_uint
     mov rax, syscall_exit
     xor rdi, rdi
     syscall
