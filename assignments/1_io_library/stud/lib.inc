@@ -266,7 +266,6 @@ parse_int:			;{long rax:(parsed num), unsigned long rdx:(parsed string length)} 
     ret 			;	return {long rax:(parsed num), unsigned long rdx:(parsed string length)};
 				;}
 
-
 string_copy:			;char *string_copy(char *rdi:source, char *rsi:destination, unsigned long rdx:length)//return destination
 				;{
     push rdi			;	*(rsp -= 8) = rsi:destination;
