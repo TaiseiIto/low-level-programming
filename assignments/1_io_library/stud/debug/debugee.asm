@@ -85,8 +85,8 @@ print_uint:			;void print_uint(unsigned long rdi:integer)//print unsigned intege
     ret				;	return;
 .print_zero:			;.print_zero:
     mov r9b, char_zero		;	r9b = '0';
-    mov rax, 7			;	rax = 7;
-    mov rdx, rax		;	rdx = rax:7;
+    mov rax, 7			;	rax = 7:(num of blank bytes of r9);
+    mov rdx, 56			;	rdx = 56:(num of blank bits of r9);
     jmp .shift_last_8_decimal_digits;	goto .shift_last_8_decimal_digits;
 				;}
 
