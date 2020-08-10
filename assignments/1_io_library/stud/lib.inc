@@ -12,9 +12,6 @@ syscall_exit equ 60
 syscall_read equ 0
 syscall_write equ 1
 
-section .data
-error_message: db 'ERROR!', 0x00
-
 section .text
 
 exit:				;long exit(long rdi:exit_code)
