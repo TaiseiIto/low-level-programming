@@ -58,6 +58,24 @@ print_newline:
     ret
 
 
+print_int:			;void print_int(long rdi:integer)//print integer by decimal system
+				;{
+    mov rax, 1			;	if(rdi:integer < 0)goto print_uint
+    shl rax, 63			;
+    test rdi, rax		;
+    jz print_uint
+    mov rax, char_minus		;	rax = '-';
+    push rdi			;	*(rsp -= 8) = rdi:integer;
+    push rax			;	*(rsp -= 8) = rax;
+    mov rax, syscall_write	;	rax = syscall_write;
+    mov rdi, stdout		;	rdi = stdout;
+    mov rsi, rsp		;	rsi = rsp:"-";
+    mov rdx, 1			;	rdx = 1;
+    syscall			;	rax = write(rdi:stdout, rsi:"-", rdx:1):1;
+    pop rax			;	rax = *rsp:'-'; rsp += 8;
+    pop rdi			;	rdi = *rsp:integer; rsp += 8;
+    neg rdi			;	rdi *= -1;
+
 print_uint:			;void print_uint(unsigned long rdi:integer)//print unsigned integer by decimal system
 				;{
     push rbp			;	*(rsp -= 8) = rbp;
@@ -106,30 +124,11 @@ print_uint:			;void print_uint(unsigned long rdi:integer)//print unsigned intege
     mov rax, 7			;	rax = 7:(num of blank bytes of r9);
     mov rdx, 56			;	rdx = 56:(num of blank bits of r9);
     jmp .shift_last_8_decimal_digits;	goto .shift_last_8_decimal_digits;
-				;}
+				;}//end of print_uint
+
+				;}//end of print_int
 
 
-print_int:			;void print_int(long rdi:integer)//print integer by decimal system
-				;{
-    mov rax, 1			;	if(rdi:integer < 0)goto .positive
-    shl rax, 63			;
-    test rdi, rax		;
-    jz .positive
-    mov rax, char_minus		;	rax = '-';
-    push rdi			;	*(rsp -= 8) = rdi:integer;
-    push rax			;	*(rsp -= 8) = rax;
-    mov rax, syscall_write	;	rax = syscall_write;
-    mov rdi, stdout		;	rdi = stdout;
-    mov rsi, rsp		;	rsi = rsp:"-";
-    mov rdx, 1			;	rdx = 1;
-    syscall			;	rax = write(rdi:stdout, rsi:"-", rdx:1):1;
-    pop rax			;	rax = *rsp:'-'; rsp += 8;
-    pop rdi			;	rdi = *rsp:integer; rsp += 8;
-    neg rdi			;	rdi *= -1;
-.positive:			;.positive:
-    call print_uint		;	print_uint(rdi:(unsigned integer));
-    ret				;	return;
-				;}
 
 string_equals:
     xor rax, rax
