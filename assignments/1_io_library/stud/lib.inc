@@ -258,6 +258,7 @@ parse_int:			;{long rax:(parsed num), unsigned long rdx:(parsed string length)} 
     ja .error
     neg rax			;	rax:(parsed num) *= -1;
     inc rdx			;	rdx:(parsed string length)++;
+    jmp .end			;	goto .end;
 .error:				;.error:
     xor rax, rax		;	(rax:(parsed num) ^= rax):(rax = 0);
     xor rdx, rdx		;	(rdx:(parsed string length) ^= rdx):(rdx = 0);

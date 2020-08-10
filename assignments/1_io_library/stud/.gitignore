@@ -34,3 +34,6 @@ read_word_too_long.o
 parse_int
 parse_int.asm
 parse_int.o
+string_equals
+string_equals.asm
+string_equals.o
