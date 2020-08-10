@@ -1,6 +1,7 @@
 char_carriage_return equ 0x0d
 char_minus equ 0x2d
 char_new_line equ 0x0a
+char_nine equ 0x39
 char_null equ 0x00
 char_space equ 0x20
 char_tab equ 0x09
@@ -198,9 +199,42 @@ read_word:			;char *read_word(char *rdi:buf, unsigned long rsi:sz):(if success, 
 
 ; rdi points to a string
 ; returns rax: number, rdx : length
-parse_uint:
-    xor rax, rax
-    ret
+parse_uint:			;{unsigned long rax:(parsed num), unsigned long rdx:(parsed string length)} parse_uint(char *rdi:string)
+				;{
+    xor rax, rax		;	(rax:(parsed num) ^= rax):(rax = 0);
+    xor rdx, rdx		;	(rdx:(parsed string length) ^= rdx):(rdx = 0);
+    mov r9, 10			;	r9 = 10;//decimal system
+    xor r10, r10		;	(r10:(parsed digit) ^= r10):(r10 = 0);
+.parse_8_digits:		;.parse_8_digits:
+    mov r8, qword[rdi]		;	char r8[8] = *rdi;
+    xor rcx, rcx		;	(rcx:(parse rcx byte of r8) ^= rcx):(rcx = 0);
+.parse_1_digit:			;.parse_1_digits:
+    cmp r8b, char_zero		;	if(r8[0] < '0')goto .end;
+    jb .end
+    cmp r8b, char_nine		;	if('9' < r8[0])goto .end;
+    ja .end
+    push rdx			;	*(rsp -= 8) = rdx;//protect rdx from mul
+    mul r9			;	rdx:rax:(parsed num) = rax * r9:10;
+    test rdx, rdx		;	if(0 < rdx)goto .too_big;
+    jnz .too_big
+    pop rdx			;	rdx = *rsp; rsp += 8;//recover rdx
+    sub r8b, char_zero		;	r8[0] -= '0';//parsed digit
+    mov r10b, r8b		;	r10b = r8[0]:(parsed digit);
+    add rax, r10		;	rax:(parsed num) += r10:(parsed digit);
+    jc .too_big			;	if(carry_flag)goto .too_big;
+    inc rcx			;	rcx:(parse rcx byte of r8)++;
+    inc rdx			;	rdx:(parsed string length)++;
+    cmp rcx, 8			;	if(rcx:(parse rcx byte of r8) == 8)goto .parse_8_digits;
+    je .parse_8_digits
+    sar r8, 8			;	r8 >>= 8;
+    jmp .parse_1_digit		;	goto .parse_1_digit;
+.too_big:
+    xor rax, rax		;	(rax:(parsed num) ^= rax):(rax = 0);
+    xor rdx, rdx		;	(rdx:(parsed string length) ^= rdx):(rdx = 0);
+    ret				;	return {unsigned long rax:(parsed num):0, unsigned long rdx:(parsed string length):0};
+.end:
+    ret				;	return {unsigned long rax:(parsed num), unsigned long rdx:(parsed string length)};
+				;}
 
 ; rdi points to a string
 ; returns rax: number, rdx : length
