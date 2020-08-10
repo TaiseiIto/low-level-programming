@@ -241,9 +241,30 @@ parse_uint:			;{unsigned long rax:(parsed num), unsigned long rdx:(parsed string
 
 ; rdi points to a string
 ; returns rax: number, rdx : length
-parse_int:
-    xor rax, rax
-    ret 
+parse_int:			;{long rax:(parsed num), unsigned long rdx:(parsed string length)} parse_int(char *rdi:string)
+				;{
+    cmp byte[rdi], char_minus	;	if(*rdi == '-')goto .minus;
+    je .minus
+    call parse_uint		;	{rax, rdx} = parse_uint(rdi:string);
+    mov r8, -1			;	r8 = -1;//check range
+    test rax, r8		;	if(rax < 0)goto .error;
+    jnz .error
+    jmp .end			;	else goto .end;
+.minus:				;.minus:
+    inc rdi			;	rdi:string++;//skip '-'
+    call parse_uint		;	{rax, rdx} = parse_uint(rdi:(abs part string));
+    mov r8, -1			;	r8 = -1;//check range
+    cmp rax, r8			;	if(0x8000000000000000 rax)goto .error;
+    ja .error
+    neg rax			;	rax:(parsed num) *= -1;
+    inc rdx			;	rdx:(parsed string length)++;
+.error:				;.error:
+    xor rax, rax		;	(rax:(parsed num) ^= rax):(rax = 0);
+    xor rdx, rdx		;	(rdx:(parsed string length) ^= rdx):(rdx = 0);
+    ret				;	return {long rax:(parsed num):0, unsigned long rdx:(parsed string length):0};
+.end:				;.end:
+    ret 			;	return {long rax:(parsed num), unsigned long rdx:(parsed string length)};
+				;}
 
 
 string_copy:			;char *string_copy(char *rdi:source, char *rsi:destination, unsigned long rdx:length)//return destination
