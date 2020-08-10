@@ -303,32 +303,64 @@ string_copy:			;char *string_copy(char *rdi:source, char *rsi:destination, unsig
 .copy_byte:			;.copy_byte://rdx == 1
     mov al, byte[rdi]		;		al = *rdi;
     mov byte[rsi], al		;		*rsi = al;
-    jmp .loop_end		;		break;
+    cmp al, char_null		;		if(al == '\0')goto .loop_end;
+    je .loop_end		;
+    jmp .error			;		else goto .error;
 .copy_word:			;.copy_word://2 <= rdx
     mov ax, word[rdi]		;		ax = *rdi;
     mov word[rsi], ax		;		*rsi = ax;
     add rdi, 2			;		rdi += 2:(word);
     add rsi, 2			;		rsi += 2:(word);
     sub rdx, 2			;		rdx -= 2:(word);
-    jz .loop_end		;		if(rdx == 0)goto .loop_end;
-    jmp .loop_begin		;		else goto .loop_begin;
+    xor rcx, rcx		;		(rcx:(num of checked bytes) ^= rcx):(rcx = 0);
+.check_word:			;.check_word:
+    cmp al, char_null		;		if(al == '\0')goto .loop_end;
+    je .loop_end		;
+    shr rax, 8			;		rax >>= 8;
+    inc rcx			;		rcx:(num of checked bytes)++;
+    cmp rcx, 2			;		if(rcx < 2)goto .check_word;
+    jb .check_word
+    test rdx, rdx		;		if(rdx == 0)goto .error;
+    jz .error
+    jmp .loop_begin		;		goto .loop_begin;
 .copy_dword:			;.copy_dword://4 <= rdx
     mov eax, dword[rdi]		;		eax = *rdi;
     mov dword[rsi], eax		;		*rsi = eax;
     add rdi, 4			;		rdi += 4:(dword);
     add rsi, 4			;		rsi += 4:(dword);
     sub rdx, 4			;		rdx -= 4:(dword);
-    jz .loop_end		;		if(rdx == 0)goto .loop_end;
-    jmp .loop_begin		;		else goto .loop_begin;
+    xor rcx, rcx		;		(rcx:(num of checked bytes) ^= rcx):(rcx = 0);
+.check_dword:			;.check_word:
+    cmp al, char_null		;		if(al == '\0')goto .loop_end;
+    je .loop_end		;
+    shr rax, 8			;		rax >>= 8;
+    inc rcx			;		rcx:(num of checked bytes)++;
+    cmp rcx, 4			;		if(rcx < 2)goto .check_word;
+    jb .check_dword
+    test rdx, rdx		;		if(rdx == 0)goto .error;
+    jz .error
+    jmp .loop_begin		;		goto .loop_begin;
 .copy_qword:			;.copy_qword://8 <= rdx
     mov rax, qword[rdi]		;		rax = *rdi;
     mov qword[rsi], rax		;		*rsi = rax;
     add rdi, 8			;		rdi += 8:(qword);
     add rsi, 8			;		rsi += 8:(qword);
     sub rdx, 8			;		rdx -= 8:(qword);
-    jz .loop_end		;		if(rdx == 0)goto .loop_end;
-    jmp .loop_begin		;		else goto .loop_begin;
+    xor rcx, rcx		;		(rcx:(num of checked bytes) ^= rcx):(rcx = 0);
+.check_qword:			;.check_word:
+    cmp al, char_null		;		if(al == '\0')goto .loop_end;
+    je .loop_end		;
+    shr rax, 8			;		rax >>= 8;
+    inc rcx			;		rcx:(num of checked bytes)++;
+    cmp rcx, 8			;		if(rcx < 2)goto .check_word;
+    jb .check_qword
+    test rdx, rdx		;		if(rdx == 0)goto .error;
+    jz .error
+    jmp .loop_begin		;		goto .loop_begin;
 .loop_end:			;	}
     pop rax			;	rax = (*rsp):destination; rsp += 8;
     ret				;	return rax:destication;
+.error				;.error:
+    xor rax, rax		;	(rax ^= rax):(rax = NULL);
+    ret				;	return rax:NULL;
 				;}
