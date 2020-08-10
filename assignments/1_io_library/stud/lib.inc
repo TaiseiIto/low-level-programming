@@ -360,7 +360,7 @@ string_copy:			;char *string_copy(char *rdi:source, char *rsi:destination, unsig
 .loop_end:			;	}
     pop rax			;	rax = (*rsp):destination; rsp += 8;
     ret				;	return rax:destication;
-.error				;.error:
+.error:				;.error:
     xor rax, rax		;	(rax ^= rax):(rax = NULL);
     ret				;	return rax:NULL;
 				;}
