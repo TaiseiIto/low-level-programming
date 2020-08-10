@@ -300,6 +300,8 @@ string_copy:			;char *string_copy(char *rdi:source, char *rsi:destination, unsig
     jae .copy_dword		;
     cmp rdx, 2			;		if(2 <= rdx:length)goto .copy_word;
     jae .copy_word		;
+    test rdx, rdx		;		if(rdx == 0)goto .error;
+    jz .error
 .copy_byte:			;.copy_byte://rdx == 1
     mov al, byte[rdi]		;		al = *rdi;
     mov byte[rsi], al		;		*rsi = al;
