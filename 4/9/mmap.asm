@@ -58,11 +58,10 @@ print_string:			;unsigned long:(num of written bytes) print_string(char *rdi:str
 
 _start:				;int main(void)
 				;{
-	cmp qword[rsp], 1	;	if(argc == 1)goto .no_file_name;
+	cmp qword[rsp], 1	;	if(argc == 1)goto .no_file_name;//argc == qword[rsp]
 	je .no_file_name	;
 	mov rax, SYSCALL_OPEN	;	rax = open(rdi:file_name, rsi:0/*Read Only*/, rdx:0/*permission mode when the file is created*/):(success:(file descriptor), failure:-1);
-	mov rdi, qword[rsp + 8]	;		//rdi = argv;
-	mov rdi, qword[rdi + 8]	;		//rdi = argv[1];
+	mov rdi, qword[rsp + 16];		//argv[n] == qword[rsp + 8 + 8 * n];
 	xor rsi, rsi		;		//Read Only
 	xor rdx, rdx		;		//permission mode when the file is created
 	syscall			;
