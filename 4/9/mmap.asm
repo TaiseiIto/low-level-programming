@@ -48,7 +48,13 @@ print_string:			;unsigned long:(num of written bytes) print_string(char *rdi:str
 	mov rdi, STDOUT		;	rdi = stdout;
 	pop rsi			;	rsi = (*rsp):string; rsp += 8;
 	syscall			;	rax = write(rdi:stdout, rsi:string, rdx:string_length(string)):(num of written bytes);
+	mov rdx, -1		;	if(rax == -1)goto .write_failure;
+	cmp rax, rdx		;
+	je .write_failure	;
 	ret			;	return rax:(num of written bytes);
+.write_failure:			;.write_failure:
+	mov rdi, write_failure_message;	error_message(write_failure_message);
+	call error_message	;
 				;}
 
 _start:				;int main(void)
