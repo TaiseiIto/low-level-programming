@@ -59,6 +59,7 @@ _start:				;int main(void)
 	xor r9, r9		;		//map the file from first byte
 	syscall			;
 	mov rdx, -1		;	if(rax == -1)goto .mmap_failure;
+	cmp rax, rdx		;
 	je .mmap_failure	;
 	push rax		;	*(rsp -= 8) = (mapped address);
 	mov rax, SYSCALL_MUMAP	;	rax = mumap(rdi:(mapped address), rsi:(mapped size)):(success:0, failure:-1);
