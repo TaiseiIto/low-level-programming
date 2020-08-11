@@ -67,7 +67,7 @@ _start:				;int main(void)
 	push rsi		;	*(rsp -= 8) = rsi:(mapped size);
 	mov rdx, PROT_READ	;		//read only
 	mov r10, MAP_PRIVATE	;		//unshared among processes
-	mov r8, qword[rsp]	;		//opened file descriptor
+	mov r8, qword[rsp + 8]	;		//opened file descriptor
 	xor r9, r9		;		//map the file from first byte
 	syscall			;
 	mov rdx, -1		;	if(rax == -1)goto .mmap_failure;
