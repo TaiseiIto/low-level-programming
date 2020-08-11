@@ -1,2 +1,5 @@
-mapping_loop
-mapping_loop.o
+mappings_loop.exe
+mappings_loop.o
+segfault_badaddr.exe
+segfault_badaddr.o
+
