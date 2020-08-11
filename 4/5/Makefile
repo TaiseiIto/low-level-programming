@@ -1,8 +1,11 @@
-all:mapping_loop
+all:mapping_loop.exe segfault_badaddr.exe
 
-mapping_loop:mapping_loop.o
+clean:
+	rm *.exe *.o
+
+%.exe:%.o
 	ld $^ -o $@
 
-mapping_loop.o:mappings_loop.asm
+%.o:%.asm
 	nasm $^ -f elf64 -o $@
 
