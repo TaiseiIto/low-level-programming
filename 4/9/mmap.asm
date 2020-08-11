@@ -38,6 +38,18 @@ error_message:			;void error_message(char *rdi:message)
 	syscall			;
 				;}
 
+print_string:			;unsigned long:(num of written bytes) print_string(char *rdi:string)//print string to stdout
+				;{
+	push rdi		;	*(rsp -= 8) = rdi:string;
+	call string_length	;	rax = string_length(rdi:string);
+	mov rdx, rax		;	rdx = rax:string_length(string);
+	mov rax, SYSCALL_WRITE	;	rax = syscall_write;
+	mov rdi, STDOUT		;	rdi = stdout;
+	pop rsi			;	rsi = (*rsp):string; rsp += 8;
+	syscall			;	rax = write(rdi:stdout, rsi:string, rdx:string_length(string)):(num of written bytes);
+	ret			;	return rax:(num of written bytes);
+				;}
+
 _start:				;int main(void)
 				;{
 	mov rax, SYSCALL_OPEN	;	rax = open(rdi:file_name, rsi:0/*Read Only*/, rdx:0/*permission mode when the file is created*/):(success:(file descriptor), failure:-1);
@@ -62,6 +74,8 @@ _start:				;int main(void)
 	cmp rax, rdx		;
 	je .mmap_failure	;
 	push rax		;	*(rsp -= 8) = (mapped address);
+	mov rdi, rax		;	rdi = rax:(mapped address);
+	call print_string	;	print_string(rdi:(mapped address));
 	mov rax, SYSCALL_MUMAP	;	rax = mumap(rdi:(mapped address), rsi:(mapped size)):(success:0, failure:-1);
 	pop rdi			;	rdi = *rsp:(mapped address); rsp += 8;
 	pop rsi			;	rsi = *rsp:(mapped size); rsp += 8;
