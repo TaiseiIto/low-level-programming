@@ -1,5 +1,5 @@
 #!/bin/sh
-./mapping_loop &
-cat /proc/$(pidof mapping_loop)/maps
-kill $(pidof mapping_loop)
+./mappings_loop.exe &
+cat /proc/$(pidof mappings_loop.exe)/maps
+kill $(pidof mappings_loop.exe)
 
