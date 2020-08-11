@@ -15,7 +15,6 @@ global _start
 
 section .data
 
-file_name: db 'test.txt', CHAR_NULL	;char * const file_name = "test.txt";
 close_failure_message: db 'CLOSE FAILURE!', CHAR_NEWLINE, CHAR_NULL;char * const close_failure_message = "CLOSE FAILURE!\n";
 mmap_failure_message: db 'MMAP_FAILURE!', CHAR_NEWLINE, CHAR_NULL;char * const mmap_failure_message = "MMAP FAILURE!\n";
 mumap_failure_message: db 'MUMAP_FAILURE!', CHAR_NEWLINE, CHAR_NULL;char * const mumap_failure_message = "MUMAP FAILURE!\n";
@@ -62,9 +61,10 @@ _start:				;int main(void)
 	cmp qword[rsp], 1	;	if(argc == 1)goto .no_file_name;
 	je .no_file_name	;
 	mov rax, SYSCALL_OPEN	;	rax = open(rdi:file_name, rsi:0/*Read Only*/, rdx:0/*permission mode when the file is created*/):(success:(file descriptor), failure:-1);
-	mov rdi, file_name	;
-	xor rsi, rsi		;//Read Only
-	xor rdx, rdx		;//permission mode when the file is created
+	mov rdi, qword[rsp + 8]	;		//rdi = argv;
+	mov rdi, qword[rdi + 8]	;		//rdi = argv[1];
+	xor rsi, rsi		;		//Read Only
+	xor rdx, rdx		;		//permission mode when the file is created
 	syscall			;
 	mov rdx, -1		;	if(rax == -1)goto .open_failure;
 	cmp rax, rdx		;
