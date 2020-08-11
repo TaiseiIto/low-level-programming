@@ -71,7 +71,7 @@ _start:				;int main(void)
 	push rax		;	*(rsp -= 8) = (file descriptor);
 	mov rax, SYSCALL_MMAP	;	rax = mmap(rdi:(destination address), rsi:(num of mapping bytes), rdx:(protection flags), r10:(flags), r8:(file descriptor), r9:(offset in the file)):(success:(destination address), failure:-1);//copy file content to memory
 	xor rdi, rdi		;		//entrust destination address determination to OS
-	mov rsi, 0x1000		;		//1KB
+	mov rsi, 0x2000		;		//8KB
 	push rsi		;	*(rsp -= 8) = rsi:(mapped size);
 	mov rdx, PROT_READ	;		//read only
 	mov r10, MAP_PRIVATE	;		//unshared among processes
