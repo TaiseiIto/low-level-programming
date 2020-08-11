@@ -17,9 +17,10 @@ section .data
 
 file_name: db 'test.txt', CHAR_NULL	;char * const file_name = "test.txt";
 close_failure_message: db 'CLOSE FAILURE!', CHAR_NEWLINE, CHAR_NULL;char * const close_failure_message = "CLOSE FAILURE!\n";
-open_failure_message: db 'OPEN FAILURE!', CHAR_NEWLINE, CHAR_NULL;char * const open_failure_message = "OPEN FAILURE!\n";
 mmap_failure_message: db 'MMAP_FAILURE!', CHAR_NEWLINE, CHAR_NULL;char * const mmap_failure_message = "MMAP FAILURE!\n";
 mumap_failure_message: db 'MUMAP_FAILURE!', CHAR_NEWLINE, CHAR_NULL;char * const mumap_failure_message = "MUMAP FAILURE!\n";
+no_file_name_message: db 'NO FILE NAME!', CHAR_NEWLINE, CHAR_NULL;char * const no_file_name_message = "NO FILE NAME!\n";
+open_failure_message: db 'OPEN FAILURE!', CHAR_NEWLINE, CHAR_NULL;char * const open_failure_message = "OPEN FAILURE!\n";
 write_failure_message: db 'WRITE_FAILURE!', CHAR_NEWLINE, CHAR_NULL;char * const write_failure_message = "WRITE FAILURE!\n";
 
 section .text
@@ -52,6 +53,8 @@ print_string:			;unsigned long:(num of written bytes) print_string(char *rdi:str
 
 _start:				;int main(void)
 				;{
+	cmp qword[rsp], 1	;	if(argc == 1)goto .no_file_name;
+	je .no_file_name	;
 	mov rax, SYSCALL_OPEN	;	rax = open(rdi:file_name, rsi:0/*Read Only*/, rdx:0/*permission mode when the file is created*/):(success:(file descriptor), failure:-1);
 	mov rdi, file_name	;
 	xor rsi, rsi		;//Read Only
@@ -94,14 +97,17 @@ _start:				;int main(void)
 .close_failure:			;.close_failure:
 	mov rdi, close_failure_message;	error_message(close_failure_message);
 	call error_message	;
-.open_failure:			;.open_failure:
-	mov rdi, open_failure_message;	error_message(open_failure_message);
-	call error_message	;
 .mmap_failure:			;.mmap_failure:
 	mov rdi, mmap_failure_message;	error_message(mmap_failure_message);
 	call error_message	;
 .mumap_failure:			;.mmap_failure:
 	mov rdi, mumap_failure_message;	error_message(mumap_failure_message);
+	call error_message	;
+.no_file_name:			;.no_file_name:
+	mov rdi, no_file_name_message; error_message(no_file_name_message);
+	call error_message	;
+.open_failure:			;.open_failure:
+	mov rdi, open_failure_message;	error_message(open_failure_message);
 	call error_message	;
 				;}
 
