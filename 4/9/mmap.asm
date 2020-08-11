@@ -1,8 +1,10 @@
 %define CHAR_NEWLINE 0x0a
 %define CHAR_NULL 0x00
 %define STDOUT 0x0000000000000001
+%define STDERR 0x0000000000000002
 %define SYSCALL_CLOSE 0x06
 %define SYSCALL_EXIT 0x3c
+%define SYSCALL_MMAP 0x09
 %define SYSCALL_OPEN 0x02
 %define SYSCALL_WRITE 0x01
 
@@ -11,10 +13,48 @@ global _start
 section .data
 
 file_name: db 'test.txt', CHAR_NULL	;char * const file_name = "test.txt";
-open_failure_message: db 'FAILURE!', CHAR_NEWLINE, CHAR_NULL;char * const open_failure_message = "FAILURE!\n";
-open_success_message: db 'SUCCESS!', CHAR_NEWLINE, CHAR_NULL;char * const open_success_message = "SUCCESS\n";
+close_failure_message: db 'CLOSE FAILURE!', CHAR_NEWLINE, CHAR_NULL;char * const close_failure_message = "CLOSE FAILURE!\n";
+open_failure_message: db 'OPEN FAILURE!', CHAR_NEWLINE, CHAR_NULL;char * const open_failure_message = "OPEN FAILURE!\n";
+mmap_failure_message: db 'MMAP_FAILURE!', CHAR_NEWLINE, CHAR_NULL;char * const mmap_failure_message = "MMAP FAILURE!\n";
+write_failure_message: db 'WRITE_FAILURE!', CHAR_NEWLINE, CHAR_NULL;char * const write_failure_message = "WRITE FAILURE!\n";
 
 section .text
+
+error_message:			;void error_message(char *rdi:message)
+				;{
+	push rdi		;	*(rsp -= 8) = rdi:message;
+	call string_length	;
+	mov rdx, rax		;	rdx = rax:string_length(open_failure_message);
+	mov rax, SYSCALL_WRITE	;	write(rdi:stdout, rsi:open_failure_message, rdx:string_length(open_failure_message));
+	mov rdi, STDERR		;
+	pop rsi			;	rsi = *rsp:message; rsp += 8;
+	syscall			;
+	mov rax, SYSCALL_EXIT	;	exit(1);
+	mov rdi, 1		;
+	syscall			;
+				;}
+
+_start:				;int main(void)
+				;{
+	mov rax, SYSCALL_OPEN	;	rax:(file descriptor) = open(rdi:file_name, rsi:0/*Read Only*/, rdx:0/*permission mode when the file is created*/);
+	mov rdi, file_name	;
+	xor rsi, rsi		;//Read Only
+	xor rdx, rdx		;//permission mode when the file is created
+	syscall			;
+	mov rdx, -1		;	if(file == NULL)goto .open_failure;
+	cmp rax, rdx		;
+	je .open_failure	;
+	push rax		;	*(rsp -= 8) = (file descriptor);
+	pop rdi			;	rdi = *rsp:(file descriptor); rsp += 8;
+	mov rax, SYSCALL_CLOSE	;	close(rdi:(file descriptor));
+	syscall			;
+	mov rax, SYSCALL_EXIT	;	exit(0);
+	xor rdi, rdi		;
+	syscall			;
+.open_failure:			;.open_failure:
+	mov rdi, open_failure_message;	error_message(open_failure_message);
+	call error_message	;
+				;}
 
 string_length:			;unsigned long string_length(char *rdi:string)
 				;{
@@ -36,39 +76,3 @@ string_length:			;unsigned long string_length(char *rdi:string)
 	ret			;	return rax;
 				;}
 
-_start:				;int main(void)
-				;{
-	mov rax, SYSCALL_OPEN	;	rax:(file descriptor) = open(rdi:file_name, rsi:0/*Read Only*/, rdx:0/*permission mode when the file is created*/);
-	mov rdi, file_name	;
-	xor rsi, rsi		;//Read Only
-	xor rdx, rdx		;//permission mode when the file is created
-	syscall			;
-	mov rdx, -1		;	if(file == NULL)goto .open_failure;
-	cmp rax, rdx		;
-	je .open_failure	;
-	push rax		;	*(rsp -= 8) = (file descriptor);
-	mov rdi, open_success_message;	rax = string_length(open_success_message);
-	call string_length	;
-	mov rdx, rax		;	rdx = rax:string_length(open_success_message);
-	mov rax, SYSCALL_WRITE	;	write(rdi:stdout, rsi:open_success_message, rdx:string_length(open_success_message));
-	mov rdi, STDOUT		;
-	mov rsi, open_success_message;
-	syscall			;
-	pop rdi			;	rdi = *rsp:(file descriptor); rsp += 8;
-	mov rax, SYSCALL_CLOSE	;	close(rdi:(file descriptor));
-	syscall			;
-	mov rax, SYSCALL_EXIT	;	exit(0);
-	xor rdi, rdi		;
-	syscall			;
-.open_failure:			;.open_failure:
-	mov rdi, open_failure_message;	rax = string_length(open_failure_message);
-	call string_length	;
-	mov rdx, rax		;	rdx = rax:string_length(open_failure_message);
-	mov rax, SYSCALL_WRITE	;	write(rdi:stdout, rsi:open_failure_message, rdx:string_length(open_failure_message));
-	mov rdi, STDOUT		;
-	mov rsi, open_failure_message;
-	syscall			;
-	mov rax, SYSCALL_EXIT	;	exit(1);
-	mov rdi, 1		;
-	syscall			;
-				;}
