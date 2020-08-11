@@ -23,13 +23,20 @@ exit:				;long exit(long rdi:exit_code)
 string_length:			;unsigned long string_length(char *rdi:string)
 				;{
     xor rax, rax		;	(rax ^= rax):(rax = 0);
-.loop_begin:			;	while(1)
-				;	{
-    cmp byte[rdi + rax], 0x00	;		if(!*rdi:string)break;
-    je .loop_end		;
-    inc rax			;		rax++;
-    jmp .loop_begin		;
-.loop_end:			;	}
+.check_next_8_bytes:		;.check_next_8_bytes:
+    mov rdx, qword[rdi]		;	rdx = *(long *)rdi;//8 characters
+    xor rcx, rcx		;	(rcx:(num of checked bytes) ^= rcx):(rcx = 0);
+.check_next_byte:		;.check_next_byte:
+    cmp dl, char_null		;	if(dl == '\0')goto .end;
+    je .end
+    inc rax			;	rax++;
+    inc rcx			;	rcx++;
+    shr rdx, 8			;	rdx >>= 8;
+    cmp rcx, 8			;	if(rcx:(num of checked bytes) < 8)goto .check_next_byte;
+    jb .check_next_byte;
+    add rdi, 8			;	rdi:(checked address) += 8;
+    jmp .check_next_8_bytes	;	goto .check_next_8_bytes;
+.end:				;.end:
     ret				;	return rax;
 				;}
 
@@ -114,7 +121,7 @@ print_uint:			;void print_uint(unsigned long rdi:integer)//print unsigned intege
     mov rdx, rax		;	rdx = rax:(8 - rcx);
     shl rdx, 3			;	(rdx <<= 3):(rdx = 8 * (8 - rcx));
 .shift_last_8_decimal_digits:	;.shift_last_8_decimal_digits
-    sal r9, 1			;	r9 <<= rdx:(8 * (8 - rcx));
+    shl r9, 1			;	r9 <<= rdx:(8 * (8 - rcx));
     dec rdx			;
     jnz .shift_last_8_decimal_digits;
     push r9			;	*(rsp -= 8) = r9:(rcx decimal digits);
@@ -252,7 +259,7 @@ parse_uint:			;{unsigned long rax:(parsed num), unsigned long rdx:(parsed string
     inc rdx			;	rdx:(parsed string length)++;
     cmp rcx, 8			;	if(rcx:(parse rcx byte of r8) == 8)goto .parse_8_digits;
     je .parse_next_8_digits
-    sar r8, 8			;	r8 >>= 8;
+    shr r8, 8			;	r8 >>= 8;
     jmp .parse_1_digit		;	goto .parse_1_digit;
 .too_big:			;.too_big:
     xor rax, rax		;	(rax:(parsed num) ^= rax):(rax = 0);
