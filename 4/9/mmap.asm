@@ -1,3 +1,4 @@
+%define CHAR_NEWLINE 0x0a
 %define CHAR_NULL 0x00
 %define STDOUT 0x0000000000000001
 %define SYSCALL_CLOSE 0x06
@@ -9,8 +10,9 @@ global _start
 
 section .data
 
-open_failure_message: db 'cannot open '	;char * const open_failure_message = "cannot open test.txt";
-file_name: db 'test.txt', CHAR_NULL	;char * const file_name = open_failure_message + 12;
+file_name: db 'test.txt', CHAR_NULL	;char * const file_name = "test.txt";
+open_failure_message: db 'FAILURE!', CHAR_NEWLINE, CHAR_NULL;char * const open_failure_message = "FAILURE!\n";
+open_success_message: db 'SUCCESS!', CHAR_NEWLINE, CHAR_NULL;char * const open_success_message = "SUCCESS\n";
 
 section .text
 
@@ -44,7 +46,15 @@ _start:				;int main(void)
 	mov rdx, -1		;	if(file == NULL)goto .open_failure;
 	cmp rax, rdx		;
 	je .open_failure	;
-	mov rdi, rax		;	rdi = rax:(file descriptor);
+	push rax		;	*(rsp -= 8) = (file descriptor);
+	mov rdi, open_success_message;	rax = string_length(open_success_message);
+	call string_length	;
+	mov rdx, rax		;	rdx = rax:string_length(open_success_message);
+	mov rax, SYSCALL_WRITE	;	write(rdi:stdout, rsi:open_success_message, rdx:string_length(open_success_message));
+	mov rdi, STDOUT		;
+	mov rsi, open_success_message;
+	syscall			;
+	pop rdi			;	rdi = *rsp:(file descriptor); rsp += 8;
 	mov rax, SYSCALL_CLOSE	;	close(rdi:(file descriptor));
 	syscall			;
 	mov rax, SYSCALL_EXIT	;	exit(0);
