@@ -85,8 +85,9 @@ _start:				;int main(void)
 	pop rdi			;	rdi = *rsp:(file descriptor); rsp += 8;
 	mov rax, SYSCALL_CLOSE	;	rax = close(rdi:(file descriptor)):(success:0, failure:-1);
 	syscall			;
-	test rax, rax		;	if(rax != 0)goto .close_failure;
-	jnz .close_failure	;
+	mov rdx, -1		;	if(rax != 0)goto .close_failure;
+	cmp rax, rdx
+	je .close_failure	;
 	mov rax, SYSCALL_EXIT	;	exit(0);
 	xor rdi, rdi		;
 	syscall			;
