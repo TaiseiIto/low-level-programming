@@ -1,8 +1,8 @@
-all:main
+all:mapping_loop
 
-main:main.o
+mapping_loop:mapping_loop.o
 	ld $^ -o $@
 
-main.o:mappings_loop.asm
+mapping_loop.o:mappings_loop.asm
 	nasm $^ -f elf64 -o $@
 
