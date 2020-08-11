@@ -1,10 +1,13 @@
 %define CHAR_NEWLINE 0x0a
 %define CHAR_NULL 0x00
+%define MAP_PRIVATE 0x0000000000000002
+%define PROT_READ 0x0000000000000001
 %define STDOUT 0x0000000000000001
 %define STDERR 0x0000000000000002
 %define SYSCALL_CLOSE 0x06
 %define SYSCALL_EXIT 0x3c
 %define SYSCALL_MMAP 0x09
+%define SYSCALL_MUMAP 0x0b
 %define SYSCALL_OPEN 0x02
 %define SYSCALL_WRITE 0x01
 
@@ -16,6 +19,7 @@ file_name: db 'test.txt', CHAR_NULL	;char * const file_name = "test.txt";
 close_failure_message: db 'CLOSE FAILURE!', CHAR_NEWLINE, CHAR_NULL;char * const close_failure_message = "CLOSE FAILURE!\n";
 open_failure_message: db 'OPEN FAILURE!', CHAR_NEWLINE, CHAR_NULL;char * const open_failure_message = "OPEN FAILURE!\n";
 mmap_failure_message: db 'MMAP_FAILURE!', CHAR_NEWLINE, CHAR_NULL;char * const mmap_failure_message = "MMAP FAILURE!\n";
+mumap_failure_message: db 'MUMAP_FAILURE!', CHAR_NEWLINE, CHAR_NULL;char * const mumap_failure_message = "MUMAP FAILURE!\n";
 write_failure_message: db 'WRITE_FAILURE!', CHAR_NEWLINE, CHAR_NULL;char * const write_failure_message = "WRITE FAILURE!\n";
 
 section .text
@@ -36,17 +40,35 @@ error_message:			;void error_message(char *rdi:message)
 
 _start:				;int main(void)
 				;{
-	mov rax, SYSCALL_OPEN	;	rax:(file descriptor) = open(rdi:file_name, rsi:0/*Read Only*/, rdx:0/*permission mode when the file is created*/);
+	mov rax, SYSCALL_OPEN	;	rax = open(rdi:file_name, rsi:0/*Read Only*/, rdx:0/*permission mode when the file is created*/):(success:(file descriptor), failure:-1);
 	mov rdi, file_name	;
 	xor rsi, rsi		;//Read Only
 	xor rdx, rdx		;//permission mode when the file is created
 	syscall			;
-	mov rdx, -1		;	if(file == NULL)goto .open_failure;
+	mov rdx, -1		;	if(rax == -1)goto .open_failure;
 	cmp rax, rdx		;
 	je .open_failure	;
 	push rax		;	*(rsp -= 8) = (file descriptor);
+	mov rax, SYSCALL_MMAP	;	rax = mmap(rdi:(destination address), rsi:(num of mapping bytes), rdx:(protection flags), r10:(flags), r8:(file descriptor), r9:(offset in the file)):(success:(destination address), failure:-1);//copy file content to memory
+	xor rdi, rdi		;		//entrust destination address determination to OS
+	mov rsi, 0x1000		;		//1KB
+	push rsi		;	*(rsp -= 8) = rsi:(mapped size);
+	mov rdx, PROT_READ	;		//read only
+	mov r10, MAP_PRIVATE	;		//unshared among processes
+	mov r8, qword[rsp]	;		//opened file descriptor
+	xor r9, r9		;		//map the file from first byte
+	syscall			;
+	mov rdx, -1		;	if(rax == -1)goto .mmap_failure;
+	je .mmap_failure	;
+	push rax		;	*(rsp -= 8) = (mapped address);
+	mov rax, SYSCALL_MUMAP	;	rax = mumap(rdi:(mapped address), rsi:(mapped size)):(success:0, failure:-1);
+	pop rdi			;	rdi = *rsp:(mapped address); rsp += 8;
+	pop rsi			;	rsi = *rsp:(mapped size); rsp += 8;
+	syscall			;
+	test rax, rax		;	if(rax != 0)goto .mumap_failure;
+	jnz .mumap_failure	;
 	pop rdi			;	rdi = *rsp:(file descriptor); rsp += 8;
-	mov rax, SYSCALL_CLOSE	;	close(rdi:(file descriptor));
+	mov rax, SYSCALL_CLOSE	;	rax = close(rdi:(file descriptor)):(success:0, failure:-1);
 	syscall			;
 	test rax, rax		;	if(rax != 0)goto .close_failure;
 	jnz .close_failure	;
@@ -58,6 +80,12 @@ _start:				;int main(void)
 	call error_message	;
 .open_failure:			;.open_failure:
 	mov rdi, open_failure_message;	error_message(open_failure_message);
+	call error_message	;
+.mmap_failure:			;.mmap_failure:
+	mov rdi, mmap_failure_message;	error_message(mmap_failure_message);
+	call error_message	;
+.mumap_failure:			;.mmap_failure:
+	mov rdi, mumap_failure_message;	error_message(mumap_failure_message);
 	call error_message	;
 				;}
 
