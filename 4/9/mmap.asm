@@ -48,9 +48,14 @@ _start:				;int main(void)
 	pop rdi			;	rdi = *rsp:(file descriptor); rsp += 8;
 	mov rax, SYSCALL_CLOSE	;	close(rdi:(file descriptor));
 	syscall			;
+	test rax, rax		;	if(rax != 0)goto .close_failure;
+	jnz .close_failure	;
 	mov rax, SYSCALL_EXIT	;	exit(0);
 	xor rdi, rdi		;
 	syscall			;
+.close_failure:			;.close_failure:
+	mov rdi, close_failure_message;	error_message(close_failure_message);
+	call error_message	;
 .open_failure:			;.open_failure:
 	mov rdi, open_failure_message;	error_message(open_failure_message);
 	call error_message	;
