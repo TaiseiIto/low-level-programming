@@ -81,6 +81,8 @@ stat:
 .__glibc_reserved1:	dq 0x0000000000000000
 .__glibc_reserved2:	dq 0x0000000000000000
 
+stat_st_dev_message: db 'stat.st_dev:', CHAR_NULL ;char *stat_st_dev_message = "stat.st_dev";
+
 no_file_name_message: db 'NO FILE NAME!', CHAR_NEWLINE, CHAR_NULL ;char *no_file_name_message = "NO FILE NAME!\n";
 close_error_message: db 'CLOSE ERROR!', CHAR_NEWLINE, CHAR_NULL ;char *close_error_message = "CLOSE ERROR!\n";
 fstat_error_message: db 'FSTAT ERROR!', CHAR_NEWLINE, CHAR_NULL ;char *fstat_error_message = "FSTAT ERROR!\n";
@@ -186,6 +188,24 @@ print_string:				;unsigned long:(num of written bytes) print_string(char *rdi:st
 	ret				;	return rax:(num of written bytes);
 					;}
 
+print_char:				;unsigned long:(num of written bytes):1 print_char(char rdi:character)//print char to stdout
+					;{
+	push rdi			;	*(rsp -= 8) = rdi:character;
+	mov rax, SYSCALL_WRITE		;	rax = syscall_write;
+	mov rdi, STDOUT			;	rdi = stdout;
+	mov rsi, rsp			;	rsi = rsp:&character;
+	mov rdx, 1			;	rdx = 1:(num of written bytes);
+	syscall				;	rax = write(rdi:stdout, rsi:&character, rdx:1:(num of written bytes)):(num of written bytes);
+	pop rdi				;	rdi = (*rsp):character; rsp += 8;
+	ret				;	return rax:(num of written bytes):1;
+					;}
+
+print_newline:				;unsigned long:(num of written bytes):1 print_newline(void)//print '\n' to stdout
+					;{
+	mov rdi, CHAR_NEWLINE		;	rdi = '\n';
+	jmp print_char			;	return print_char(rdi:'\n');
+					;}
+
 _start:					;int main(int argc, char **argv)
 					;{
 	cmp qword[rsp], 1		;
@@ -206,8 +226,11 @@ _start:					;int main(int argc, char **argv)
 	syscall				;	rax = fstat(rdi/*file descriptor*/, rsi/*stat struct addr*/)/*success:0, error:negative*/;
 	test rax, rax			;
 	jnz .fstat_error		;	if(rax != 0)goto .fstat_error;
+	mov rdi, stat_st_dev_message	;
+	call print_string		;	print_string(stat_st_dev_message);
 	mov rdi, qword[stat.st_dev]	;
 	call print_int			;	print_int(stat->st_dev);
+	call print_newline		;	print_newline();
 .close:					;.close:
 	mov rax, SYSCALL_CLOSE		;
 	pop rdi				;	rdi = /*file descriptor*/;//stack
