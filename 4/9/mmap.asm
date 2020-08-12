@@ -63,12 +63,12 @@ _start:				;int main(void)
 	mov r10, MAP_PRIVATE	;		//unshared among processes
 	mov r8, qword[rsp]	;		//file descriptor
 	syscall			;
-	mov rdx, -1		;	if(rax:(mapped address) == -1)goto .mmap_error;
-	cmp rax, rdx		;
-	je .mmap_error		;
+	cmp rax, 0		;	if(rax:(mapped address) < 0)goto .mmap_error;
+	jl .mmap_error		;
 	push rax		;	*(rsp -= 8) = rax:(mapped address);
 	add r9, MMAP_UNIT	;	r9:(mmap offset) += MMAP_UNIT;
 	push r9			;	*(rsp -= 8) = r9:(mmap offset);
+.write:				;.write:
 	mov rdi, qword[rsp + 8]	;	rdi = rsp[1]:(mapped address);
 	mov rsi, MMAP_UNIT	;	rsi = MMAP_UNIT;
 	call string_length	;	rax = string_length(rdi:(mapped address), rsi:MMAP_UNIT);
@@ -93,6 +93,7 @@ _start:				;int main(void)
 	syscall			;
 	test rax, rax		;	if(rax != 0)goto .close_error;
 	jnz .close_error	;
+.exit:				;.exit:
 	mov rax, SYSCALL_EXIT	;	exit(0);
 	xor rdi, rdi		;
 	syscall			;
