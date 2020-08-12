@@ -27,8 +27,9 @@ section .text
 error_message:			;void error_message(char *rdi:message)
 				;{
 	push rdi		;	*(rsp -= 8) = rdi:message;
+	mov rsi, -1		;	rsi:(max length) = -1;
 	call string_length	;
-	mov rdx, rax		;	rdx = rax:string_length(open_failure_message);
+	mov rdx, rax		;	rdx = rax:string_length(rdi:message, rsi:(max length));
 	mov rax, SYSCALL_WRITE	;	write(rdi:stdout, rsi:open_failure_message, rdx:string_length(open_failure_message));
 	mov rdi, STDERR		;
 	pop rsi			;	rsi = *rsp:message; rsp += 8;
@@ -51,6 +52,7 @@ _start:				;int main(void)
 	cmp rax, rdx		;
 	je .open_failure	;
 	push rax		;	*(rsp -= 8) = (file descriptor);
+
 	pop rdi			;	rdi = *rsp:(file descriptor); rsp += 8;
 	mov rax, SYSCALL_CLOSE	;	rax = close(rdi:(file descriptor)):(success:0, failure:-1);
 	syscall			;
@@ -76,7 +78,7 @@ _start:				;int main(void)
 	call error_message	;
 				;}
 
-string_length:			;unsigned long string_length(char *rdi:string)
+string_length:			;unsigned long string_length(char *rdi:string, unsigned long rsi:(max length))
 				;{
 	xor rax, rax		;	(rax ^= rax):(rax = 0);
 .check_next_8_bytes:		;.check_next_8_bytes:
@@ -84,12 +86,14 @@ string_length:			;unsigned long string_length(char *rdi:string)
 	xor rcx, rcx		;	(rcx:(num of checked bytes) ^= rcx):(rcx = 0);
 .check_next_byte:		;.check_next_byte:
 	cmp dl, CHAR_NULL	;	if(dl == '\0')goto .end;
-	je .end
+	je .end			;
 	inc rax			;	rax++;
+	cmp rax, rsi		;	if(rax == rsi:(max length))goto .end;
+	je .end			;
 	inc rcx			;	rcx++;
 	shr rdx, 8		;	rdx >>= 8;
 	cmp rcx, 8		;	if(rcx:(num of checked bytes) < 8)goto .check_next_byte;
-	jb .check_next_byte;
+	jb .check_next_byte	;
 	add rdi, 8		;	rdi:(checked address) += 8;
 	jmp .check_next_8_bytes	;	goto .check_next_8_bytes;
 .end:				;.end:
