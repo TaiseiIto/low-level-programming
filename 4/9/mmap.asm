@@ -52,7 +52,7 @@ _start:				;int main(void)
 	xor rdx, rdx		;		//permission mode when the file is created
 	syscall			;
 	cmp rax, 0		;	if(rax < 0)goto .open_error
-	jl .open_error	;
+	jl .open_error		;
 	push rax		;	*(rsp -= 8) = (file descriptor);
 	xor r9, r9		;	(r9:(mmap offset) ^= r9):(r9 =0);
 .mmap:				;.mmap:
@@ -65,7 +65,7 @@ _start:				;int main(void)
 	syscall			;
 	mov rdx, -1		;	if(rax:(mapped address) == -1)goto .mmap_error;
 	cmp rax, rdx		;
-	je .mmap_error	;
+	je .mmap_error		;
 	push rax		;	*(rsp -= 8) = rax:(mapped address);
 	add r9, MMAP_UNIT	;	r9:(mmap offset) += MMAP_UNIT;
 	push r9			;	*(rsp -= 8) = r9:(mmap offset);
