@@ -65,7 +65,7 @@ _start:				;int main(void)
 	syscall			;
 	mov rdx, -1		;	if(rax:(mapped address) == -1)goto .mmap_failure;
 	cmp rax, rdx		;
-	je .mmap_failure;
+	je .mmap_failure	;
 	push rax		;	*(rsp -= 8) = rax:(mapped address);
 	add r9, MMAP_UNIT	;	r9:(mmap offset) += MMAP_UNIT;
 	push r9			;	*(rsp -= 8) = r9:(mmap offset);
