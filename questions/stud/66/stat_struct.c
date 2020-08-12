@@ -5,6 +5,7 @@
 int main(void)
 {
 	struct stat stat;
+	printf("stat\t%ldbytes\n", sizeof(stat));
 	printf("st_dev\t%ldbytes\n", sizeof(stat.st_dev));
 	printf("st_ino\t%ldbytes\n", sizeof(stat.st_ino));
 	printf("st_nlink\t%ldbytes\n", sizeof(stat.st_nlink));
