@@ -206,6 +206,8 @@ _start:					;int main(int argc, char **argv)
 	syscall				;	rax = fstat(rdi/*file descriptor*/, rsi/*stat struct addr*/)/*success:0, error:negative*/;
 	test rax, rax			;
 	jnz .fstat_error		;	if(rax != 0)goto .fstat_error;
+	mov rdi, qword[stat.st_dev]	;
+	call print_int			;	print_int(stat->st_dev);
 .close:					;.close:
 	mov rax, SYSCALL_CLOSE		;
 	pop rdi				;	rdi = /*file descriptor*/;//stack
