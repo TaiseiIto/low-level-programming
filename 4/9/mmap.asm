@@ -4,7 +4,7 @@
 %define PROT_READ 0x0000000000000001
 %define STDOUT 0x0000000000000001
 %define STDERR 0x0000000000000002
-%define SYSCALL_CLOSE 0x06
+%define SYSCALL_CLOSE 0x03
 %define SYSCALL_EXIT 0x3c
 %define SYSCALL_MMAP 0x09
 %define SYSCALL_MUMAP 0x0b
@@ -38,24 +38,6 @@ error_message:			;void error_message(char *rdi:message)
 	syscall			;
 				;}
 
-print_string:			;unsigned long:(num of written bytes) print_string(char *rdi:string)//print string to stdout
-				;{
-	push rdi		;	*(rsp -= 8) = rdi:string;
-	call string_length	;	rax = string_length(rdi:string);
-	mov rdx, rax		;	rdx = rax:string_length(string);
-	mov rax, SYSCALL_WRITE	;	rax = syscall_write;
-	mov rdi, STDOUT		;	rdi = stdout;
-	pop rsi			;	rsi = (*rsp):string; rsp += 8;
-	syscall			;	rax = write(rdi:stdout, rsi:string, rdx:string_length(string)):(num of written bytes);
-	mov rdx, -1		;	if(rax == -1)goto .write_failure;
-	cmp rax, rdx		;
-	je .write_failure	;
-	ret			;	return rax:(num of written bytes);
-.write_failure:			;.write_failure:
-	mov rdi, write_failure_message;	error_message(write_failure_message);
-	call error_message	;
-				;}
-
 _start:				;int main(void)
 				;{
 	cmp qword[rsp], 1	;	if(argc == 1)goto .no_file_name;//argc == qword[rsp]
@@ -69,33 +51,11 @@ _start:				;int main(void)
 	cmp rax, rdx		;
 	je .open_failure	;
 	push rax		;	*(rsp -= 8) = (file descriptor);
-	mov rax, SYSCALL_MMAP	;	rax = mmap(rdi:(destination address), rsi:(num of mapping bytes), rdx:(protection flags), r10:(flags), r8:(file descriptor), r9:(offset in the file)):(success:(destination address), failure:-1);//copy file content to memory
-	xor rdi, rdi		;		//entrust destination address determination to OS
-	mov rsi, 0x2000		;		//8KB
-	push rsi		;	*(rsp -= 8) = rsi:(mapped size);
-	mov rdx, PROT_READ	;		//read only
-	mov r10, MAP_PRIVATE	;		//unshared among processes
-	mov r8, qword[rsp + 8]	;		//opened file descriptor
-	xor r9, r9		;		//map the file from first byte
-	syscall			;
-	mov rdx, -1		;	if(rax == -1)goto .mmap_failure;
-	cmp rax, rdx		;
-	je .mmap_failure	;
-	push rax		;	*(rsp -= 8) = (mapped address);
-	mov rdi, rax		;	rdi = rax:(mapped address);
-	call print_string	;	print_string(rdi:(mapped address));
-	mov rax, SYSCALL_MUMAP	;	rax = mumap(rdi:(mapped address), rsi:(mapped size)):(success:0, failure:-1);
-	pop rdi			;	rdi = *rsp:(mapped address); rsp += 8;
-	pop rsi			;	rsi = *rsp:(mapped size); rsp += 8;
-	syscall			;
-	test rax, rax		;	if(rax != 0)goto .mumap_failure;
-	jnz .mumap_failure	;
 	pop rdi			;	rdi = *rsp:(file descriptor); rsp += 8;
 	mov rax, SYSCALL_CLOSE	;	rax = close(rdi:(file descriptor)):(success:0, failure:-1);
 	syscall			;
-	mov rdx, -1		;	if(rax != 0)goto .close_failure;
-	cmp rax, rdx
-	je .close_failure	;
+	cmp rax, 0		;	if(rax != 0)goto .close_failure;
+	jne .close_failure	;
 	mov rax, SYSCALL_EXIT	;	exit(0);
 	xor rdi, rdi		;
 	syscall			;
