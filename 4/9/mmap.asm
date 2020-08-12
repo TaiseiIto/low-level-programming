@@ -62,6 +62,7 @@ _start:				;int main(void)
 	mov rsi, MMAP_UNIT	;		//map 4KB
 	mov rdx, PROT_READ	;		//read only
 	mov r10, MAP_PRIVATE	;		//unshared among processes
+	mov r8, qword[rsp]	;		//file descriptor
 	syscall			;
 	mov rdx, -1		;	if(rax:(mapped address) == -1)goto .mmap_failure;
 	cmp rax, rdx		;
