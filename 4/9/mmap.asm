@@ -51,9 +51,8 @@ _start:				;int main(void)
 	xor rsi, rsi		;		//Read Only
 	xor rdx, rdx		;		//permission mode when the file is created
 	syscall			;
-	mov rdx, -1		;	if(rax == -1)goto .open_failure;
-	cmp rax, rdx		;
-	je .open_failure	;
+	cmp rax, 0		;	if(rax < 0)goto .open_failure
+	jl .open_failure	;
 	push rax		;	*(rsp -= 8) = (file descriptor);
 	xor r9, r9		;	(r9:(mmap offset) ^= r9):(r9 =0);
 .mmap:				;.mmap:
