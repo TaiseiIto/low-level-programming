@@ -59,7 +59,7 @@ _start:				;int main(void)
 .mmap:				;.mmap:
 	mov rax, SYSCALL_MMAP	;	rax = mmap(rdi:(mapped address), rsi:length, rdx:(protection flags), r10:(flags), r8:(file descriptor), r9:(offset)):(success:(mapped address), failure:-1);
 	xor rdi, rdi		;	(rdi:(mapped address) ^= rdi):(rdi = 0);//entrust addressing to OS
-	mov rsi, MMAP_UNIT	;		//map 4KB
+	mov rsi, MMAP_UNIT	;		//length
 	mov rdx, PROT_READ	;		//read only
 	mov r10, MAP_PRIVATE	;		//unshared among processes
 	mov r8, qword[rsp]	;		//file descriptor
@@ -68,13 +68,26 @@ _start:				;int main(void)
 	cmp rax, rdx		;
 	je .mmap_failure;
 	push rax		;	*(rsp -= 8) = rax:(mapped address);
+	add r9, MMAP_UNIT	;	r9:(mmap offset) += MMAP_UNIT;
+	push r9			;	*(rsp -= 8) = r9:(mmap offset);
+	mov rdi, qword[rsp + 8]	;	rdi = rsp[1]:(mapped address);
+	mov rsi, MMAP_UNIT	;	rsi = MMAP_UNIT;
+	call string_length	;	rax = string_length(rdi:(mapped address), rsi:MMAP_UNIT);
+	mov rdx, rax		;	rdx = rax:(mapped string length);
+	mov rax, SYSCALL_WRITE	;	rax = SYSCALL_WRITE;
+	mov rsi, rdi		;	rsi = rdi:(mapped assress);
+	mov rdi, STDOUT		;	rdi = STDOUT;
+	syscall			;	rax = write(rdi:stdout, rsi:(mapped address), rdx:length);
 .mumap:				;.mumap:
+	pop r9			;	r9 = *rsp:(mmap offset); rsp += 8;
 	mov rax, SYSCALL_MUMAP	;	rax = mumap(rdi:(mapped address), rsi:length):(success:0, failure:-1);
 	pop rdi			;	rdi = *rsp:(mapped address); rsp += 8;
-	mov rsi, MMAP_UNIT	;		//4KB
+	mov rsi, MMAP_UNIT	;		//length
 	syscall			;
 	test rax, rax		;	if(rax != 0)goto .mumap_failure;
 	jnz .mumap_failure	;
+	cmp rdx, MMAP_UNIT	;	if(rdx:(mapped string length) == MMAP_UNIT)goto .mmap;
+	je .mmap		;
 .close:				;.close:
 	pop rdi			;	rdi = *rsp:(file descriptor); rsp += 8;
 	mov rax, SYSCALL_CLOSE	;	rax = close(rdi:(file descriptor)):(success:0, failure:-1);
