@@ -11,6 +11,8 @@
 %define SYSCALL_OPEN 0x02
 %define SYSCALL_WRITE 0x01
 
+%define MMAP_UNIT 0x1000
+
 global _start
 
 section .data
@@ -43,6 +45,7 @@ _start:				;int main(void)
 				;{
 	cmp qword[rsp], 1	;	if(argc == 1)goto .no_file_name;//argc == qword[rsp]
 	je .no_file_name	;
+.open:				;.open:
 	mov rax, SYSCALL_OPEN	;	rax = open(rdi:file_name, rsi:0/*Read Only*/, rdx:0/*permission mode when the file is created*/):(success:(file descriptor), failure:-1);
 	mov rdi, qword[rsp + 16];		//argv[n] == qword[rsp + 8 + 8 * n];
 	xor rsi, rsi		;		//Read Only
@@ -52,12 +55,31 @@ _start:				;int main(void)
 	cmp rax, rdx		;
 	je .open_failure	;
 	push rax		;	*(rsp -= 8) = (file descriptor);
-
+	xor r9, r9		;	(r9:(mmap offset) ^= r9):(r9 =0);
+.mmap:				;.mmap:
+	mov rax, SYSCALL_MMAP	;	rax = mmap(rdi:(mapped address), rsi:length, rdx:(protection flags), r10:(flags), r8:(file descriptor), r9:(offset)):(success:(mapped address), failure:-1);
+	xor rdi, rdi		;	(rdi:(mapped address) ^= rdi):(rdi = 0);//entrust addressing to OS
+	mov rsi, MMAP_UNIT	;		//map 4KB
+	mov rdx, PROT_READ	;		//read only
+	mov r10, MAP_PRIVATE	;		//unshared among processes
+	syscall			;
+	mov rdx, -1		;	if(rax:(mapped address) == -1)goto .mmap_failure;
+	cmp rax, rdx		;
+	je .mmap_failure;
+	push rax		;	*(rsp -= 8) = rax:(mapped address);
+.mumap:				;.mumap:
+	mov rax, SYSCALL_MUMAP	;	rax = mumap(rdi:(mapped address), rsi:length):(success:0, failure:-1);
+	pop rdi			;	rdi = *rsp:(mapped address); rsp += 8;
+	mov rsi, MMAP_UNIT	;		//4KB
+	syscall			;
+	test rax, rax		;	if(rax != 0)goto .mumap_failure;
+	jnz .mumap_failure	;
+.close:				;.close:
 	pop rdi			;	rdi = *rsp:(file descriptor); rsp += 8;
 	mov rax, SYSCALL_CLOSE	;	rax = close(rdi:(file descriptor)):(success:0, failure:-1);
 	syscall			;
-	cmp rax, 0		;	if(rax != 0)goto .close_failure;
-	jne .close_failure	;
+	test rax, rax		;	if(rax != 0)goto .close_failure;
+	jnz .close_failure	;
 	mov rax, SYSCALL_EXIT	;	exit(0);
 	xor rdi, rdi		;
 	syscall			;
