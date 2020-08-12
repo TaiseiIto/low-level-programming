@@ -61,6 +61,7 @@ section .data
 ;__glibc_reserved[0]	8bytes
 
 stat:
+			dq 0x0000000000000000
 .st_dev:		dq 0x0000000000000000
 .st_ino:		dq 0x0000000000000000
 .st_nlink:		dq 0x0000000000000000
@@ -81,7 +82,6 @@ stat:
 .__glibc_reserved_0:	dq 0x0000000000000000
 .__glibc_reserved_1:	dq 0x0000000000000000
 .__glibc_reserved_2:	dq 0x0000000000000000
-			dq 0x0000000000000000 ;fstat overwritten region
 
 stat_st_dev_message: db 'stat.st_dev:', CHAR_NULL ;char *stat_st_dev_message = "stat.st_dev";
 stat_st_ino_message: db 'stat.st_ino:', CHAR_NULL ;char *stat_st_ino_message = "stat.st_ino";
