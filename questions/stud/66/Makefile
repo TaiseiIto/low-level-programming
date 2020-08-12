@@ -1,6 +1,9 @@
-all:stat
+all:stat stat_struct
 
 stat:stat.o
+
+stat_struct:stat_struct.c
+	gcc $^ -o $@
 
 stat.o:stat.asm
 
