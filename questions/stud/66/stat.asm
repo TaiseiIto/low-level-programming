@@ -39,6 +39,44 @@ section .data
 ;  __syscall_slong_t tv_nsec;	/* Nanoseconds.  */
 ;};
 
+;./stat_struct
+;st_dev	8bytes
+;st_ino	8bytes
+;st_nlink	8bytes
+;st_mode	4bytes
+;st_uid	4bytes
+;st_gid	4bytes
+;__pad0	4bytes
+;st_rdev	8bytes
+;st_size	8bytes
+;st_blksize	8bytes
+;st_blocks	8bytes
+;st_atim.tv_sec	8bytes
+;st_atim.tv_nsec	8bytes
+;__glibc_reserved[0]	8bytes
+
+stat:
+.st_dev:		dq 0x0000000000000000
+.st_ino:		dq 0x0000000000000000
+.st_nlink:		dq 0x0000000000000000
+.st_mode:		dw 0x00000000
+.st_uid:		dw 0x00000000
+.st_gid:		dw 0x00000000
+.__pad0:		dw 0x00000000
+.st_rev:		dq 0x0000000000000000
+.st_size:		dq 0x0000000000000000
+.st_blksize:		dq 0x0000000000000000
+.st_blocks:		dq 0x0000000000000000
+.st_atim.tv_sec:	dq 0x0000000000000000
+.st_atim.tv_nsec:	dq 0x0000000000000000
+.st_mtim.tv_sec:	dq 0x0000000000000000
+.st_mtim.tv_nsec:	dq 0x0000000000000000
+.st_ctim.tv_sec:	dq 0x0000000000000000
+.st_ctim.tv_nsec:	dq 0x0000000000000000
+.__glibc_reserved0:	dq 0x0000000000000000
+.__glibc_reserved1:	dq 0x0000000000000000
+.__glibc_reserved2:	dq 0x0000000000000000
+
 no_file_name_message: db 'NO FILE NAME!', CHAR_NEWLINE, CHAR_NULL ;char *no_file_name_message = "NO FILE NAME!\n";
 close_error_message: db 'CLOSE ERROR!', CHAR_NEWLINE, CHAR_NULL ;char *close_error_message = "CLOSE ERROR!\n";
 open_error_message: db 'OPEN ERROR!', CHAR_NEWLINE, CHAR_NULL ;char *open_error_message = "OPEN ERROR!\n";
