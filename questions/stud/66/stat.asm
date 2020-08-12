@@ -3,6 +3,7 @@
 %define STDERR 0x0000000000000002
 %define SYSCALL_CLOSE 0x0000000000000003
 %define SYSCALL_EXIT 0x000000000000003c
+%define SYSCALL_FSTAT 0x0000000000000005
 %define SYSCALL_OPEN 0x0000000000000002
 %define SYSCALL_WRITE 0x0000000000000001
 
@@ -79,6 +80,7 @@ stat:
 
 no_file_name_message: db 'NO FILE NAME!', CHAR_NEWLINE, CHAR_NULL ;char *no_file_name_message = "NO FILE NAME!\n";
 close_error_message: db 'CLOSE ERROR!', CHAR_NEWLINE, CHAR_NULL ;char *close_error_message = "CLOSE ERROR!\n";
+fstat_error_message: db 'FSTAT ERROR!', CHAR_NEWLINE, CHAR_NULL ;char *fstat_error_message = "FSTAT ERROR!\n";
 open_error_message: db 'OPEN ERROR!', CHAR_NEWLINE, CHAR_NULL ;char *open_error_message = "OPEN ERROR!\n";
 
 section .text
@@ -111,6 +113,13 @@ _start:					;int main(int argc, char **argv)
 	cmp rax, 0			;
 	jl .open_error			;	if(rax < 0)goto .open_error;
 	push rax			;	//stack /*file descriptor*/
+.fstat:					;.fstat:
+	mov rax, SYSCALL_FSTAT		;
+	mov rdi, qword[rsp]		;
+	mov rsi, stat			;
+	syscall				;	rax = fstat(rdi/*file descriptor*/, rsi/*stat struct addr*/)/*success:0, error:negative*/;
+	test rax, rax			;
+	jnz .fstat_error		;	if(rax != 0)goto .fstat_error;
 .close:					;.close:
 	mov rax, SYSCALL_CLOSE		;
 	pop rdi				;	rdi = /*file descriptor*/;//stack
@@ -127,6 +136,9 @@ _start:					;int main(int argc, char **argv)
 .close_error:				;.close_error:
 	mov rdi, close_error_message	;
 	call error			;	error(rdi:close_error_message);
+.fstat_error:				;.close_error:
+	mov rdi, fstat_error_message	;
+	call error			;	error(rdi:fstat_error_message);
 .open_error:				;.open_error:
 	mov rdi, open_error_message	;
 	call error			;	error(rdi:open_error_message);
