@@ -10,6 +10,26 @@ global _start
 
 section .data
 
+;/usr/include/x86_64-linux-gnu/bits/stat.h
+;struct stat //x86-64
+;  {
+;    __dev_t st_dev;		/* Device.  */
+;    __ino_t st_ino;		/* File serial number.	*/
+;    __nlink_t st_nlink;	/* Link count.  */
+;    __mode_t st_mode;		/* File mode.  */
+;    __uid_t st_uid;		/* User ID of the file's owner.	*/
+;    __gid_t st_gid;		/* Group ID of the file's group.*/
+;    int __pad0;
+;    __dev_t st_rdev;		/* Device number, if device.  */
+;    __off_t st_size;		/* Size of file, in bytes.  */
+;    __blksize_t st_blksize;	/* Optimal block size for I/O.  */
+;    __blkcnt_t st_blocks;	/* Number 512-byte blocks allocated. */
+;    struct timespec st_atim;	/* Time of last access.  */
+;    struct timespec st_mtim;	/* Time of last modification.  */
+;    struct timespec st_ctim;	/* Time of last status change.  */
+;    __syscall_slong_t __glibc_reserved[3];
+;  };
+
 no_file_name_message: db 'NO FILE NAME!', CHAR_NEWLINE, CHAR_NULL ;char *no_file_name_message = "NO FILE NAME!\n";
 close_error_message: db 'CLOSE ERROR!', CHAR_NEWLINE, CHAR_NULL ;char *close_error_message = "CLOSE ERROR!\n";
 open_error_message: db 'OPEN ERROR!', CHAR_NEWLINE, CHAR_NULL ;char *open_error_message = "OPEN ERROR!\n";
