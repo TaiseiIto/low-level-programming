@@ -78,9 +78,9 @@ stat:
 .st_mtim.tv_nsec:	dq 0x0000000000000000
 .st_ctim.tv_sec:	dq 0x0000000000000000
 .st_ctim.tv_nsec:	dq 0x0000000000000000
-.__glibc_reserved0:	dq 0x0000000000000000
-.__glibc_reserved1:	dq 0x0000000000000000
-.__glibc_reserved2:	dq 0x0000000000000000
+.__glibc_reserved_0:	dq 0x0000000000000000
+.__glibc_reserved_1:	dq 0x0000000000000000
+.__glibc_reserved_2:	dq 0x0000000000000000
 			dq 0x0000000000000000 ;fstat overwritten region
 
 stat_st_dev_message: db 'stat.st_dev:', CHAR_NULL ;char *stat_st_dev_message = "stat.st_dev";
@@ -341,6 +341,12 @@ _start:					;int main(int argc, char **argv)
 	call print_string		;	print_string(stat_st_ctim_tv_nsec_message);
 	mov rdi, qword[stat.st_ctim.tv_nsec];
 	call print_int			;	print_int(stat->st_ctim.tv_nsec);
+	call print_newline		;	print_newline();
+.print_stat_glibc_reserved_0:		;.print_stat_st_glibc_recerved_0:
+	mov rdi, stat_glibc_reserved_0_message;
+	call print_string		;	print_string(stat_glibc_reserved_0_message);
+	mov rdi, qword[stat.__glibc_reserved_0]	;
+	call print_int			;	print_int(stat->__glibc_reserved[0]);
 	call print_newline		;	print_newline();
 .close:					;.close:
 	mov rax, SYSCALL_CLOSE		;
