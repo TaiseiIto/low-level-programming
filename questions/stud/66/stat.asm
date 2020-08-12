@@ -1,6 +1,9 @@
+%define CHAR_MINUS 0x2d
 %define CHAR_NEWLINE 0x0a
 %define CHAR_NULL 0x00
+%define CHAR_ZERO 0x30
 %define STDERR 0x0000000000000002
+%define STDOUT 0x0000000000000001
 %define SYSCALL_CLOSE 0x0000000000000003
 %define SYSCALL_EXIT 0x000000000000003c
 %define SYSCALL_FSTAT 0x0000000000000005
@@ -98,6 +101,89 @@ error:					;void error(char *rdi:message)
 	mov rax, SYSCALL_EXIT		;
 	mov rdi, 1			;
 	syscall				;	exit(rdi:1);
+					;}
+
+print_int:				;void print_int(long rdi:integer)//print integer by decimal system
+					;{
+	mov rax, 1			;	if(rdi:integer < 0)goto print_uint
+	shl rax, 63			;
+	test rdi, rax			;
+	jz print_uint
+	mov rax, CHAR_MINUS		;	rax = '-';
+	push rdi			;	*(rsp -= 8) = rdi:integer;
+	push rax			;	*(rsp -= 8) = rax;
+	mov rax, SYSCALL_WRITE		;	rax = syscall_write;
+	mov rdi, STDOUT			;	rdi = stdout;
+	mov rsi, rsp			;	rsi = rsp:"-";
+	mov rdx, 1			;	rdx = 1;
+	syscall				;	rax = write(rdi:stdout, rsi:"-", rdx:1):1;
+	pop rax				;	rax = *rsp:'-'; rsp += 8;
+	pop rdi				;	rdi = *rsp:integer; rsp += 8;
+	neg rdi				;	rdi *= -1;
+
+print_uint:				;void print_uint(unsigned long rdi:integer)//print unsigned integer by decimal system
+					;{
+	push rbp			;	*(rsp -= 8) = rbp;
+	mov rbp, rsp			;	rbp = rsp;
+	mov rax, rdi			;	rax = rdi:integer;
+	mov r8, 10			;	r8:divisor = 10;
+	xor r9, r9			;	r9:(8 decimal digits) = 0;
+	test rax, rax			;	if(rax:integer == 0)goto .print_zero;
+	jz .print_zero;
+	mov rcx, 1			;	rcx:(num of stored r9:(8 decimal digits) bytes) = 1;
+.division_begin:			;.division_begin:
+	test rax, rax			;	if(rax == 0)goto .division_end;
+	jz .division_end		;
+	xor rdx, rdx			;	(rdx ^= rdx):(rdx = 0);
+	div r8				;	rdx = rax:rdi % r8:10; rax = rax:rdi / r8:10;
+	shl r9, 8			;	r9 <<= 8;
+	add r9b, dl			;	r9 += rdx:remainder;
+	add r9b, CHAR_ZERO		;	r9 += '0';
+	inc rcx				;	rcx++;
+	cmp rcx, 8			;	if(rcx != 8)goto .division_begin;
+	jne .division_begin		;
+	push r9				;	*(rsp -= 8) = r9:(8 decimal digits);
+	xor rcx, rcx			;	rcx = 0;
+	jmp .division_begin		;	goto .division_begin;
+.division_end:				;.division_end:
+	xor rax, rax			;	rax = 0;
+	test rcx, rcx			;	if(!rcx)goto .print;
+	jz .print			;
+	mov rax, 8			;	rax = 8;
+	sub rax, rcx			;	(rax -= rcx):(rax = 8 - rcx);
+	mov rdx, rax			;	rdx = rax:(8 - rcx);
+	shl rdx, 3			;	(rdx <<= 3):(rdx = 8 * (8 - rcx));
+.shift_last_8_decimal_digits:		;.shift_last_8_decimal_digits
+	shl r9, 1			;	r9 <<= rdx:(8 * (8 - rcx));
+	dec rdx				;
+	jnz .shift_last_8_decimal_digits;
+	push r9				;	*(rsp -= 8) = r9:(rcx decimal digits);
+.print:					;.print
+	mov rdi, rsp			;	rdi = rsp;
+	add rdi, rax			;	(rdi += rax):(rdi = address of decimal string);
+	call print_string		;	print_string(rdi:(address of decimal string));
+	leave				;	rsp = rbp; rbp = *rsp; rsp -= 8;
+	ret				;	return;
+.print_zero:				;.print_zero:
+	mov r9b, CHAR_ZERO		;	r9b = '0';
+	mov rax, 7			;	rax = 7:(num of blank bytes of r9);
+	mov rdx, 56			;	rdx = 56:(num of blank bits of r9);
+	jmp .shift_last_8_decimal_digits;	goto .shift_last_8_decimal_digits;
+					;}//end of print_uint
+
+					;}//end of print_int
+
+print_string:				;unsigned long:(num of written bytes) print_string(char *rdi:string)//print string to stdout
+					;{
+	push rdi			;	*(rsp -= 8) = rdi:string;
+	mov rsi, -1			;
+	call string_length		;	rax = string_length(rdi:string);
+	mov rdx, rax			;	rdx = rax:string_length(string);
+	mov rax, SYSCALL_WRITE		;	rax = syscall_write;
+	mov rdi, STDOUT			;	rdi = stdout;
+	pop rsi				;	rsi = (*rsp):string; rsp += 8;
+	syscall				;	rax = write(rdi:stdout, rsi:string, rdx:string_length(string)):(num of written bytes);
+	ret				;	return rax:(num of written bytes);
 					;}
 
 _start:					;int main(int argc, char **argv)
