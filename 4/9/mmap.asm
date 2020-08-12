@@ -79,7 +79,6 @@ _start:				;int main(void)
 	cmp rax, 0		;	if(rax < 0)goto .open_error
 	jl .open_error		;
 	push rax		;	*(rsp -= 8) = (file descriptor);
-	xor r9, r9		;	(r9:(mmap offset) ^= r9):(r9 =0);
 .fstat:				;.fstat:
 	mov rax, SYSCALL_FSTAT	;
 	mov rdi, qword[rsp]	;
@@ -87,7 +86,10 @@ _start:				;int main(void)
 	syscall			;	rax = fstat(rdi/*file descriptor*/, rsi/*stat struct addr*/)/*success:0, error:negative*/;
 	test rax, rax		;
 	jnz .fstat_error	;	if(rax != 0)goto .fstat_error;
+	xor r9, r9		;	(r9:(mmap offset) ^= r9):(r9 =0);
 .mmap:				;.mmap:
+	cmp qword[stat.st_size], r9;	if(stat->st_size <= r9)goto .close;
+	jbe .close		;
 	mov rax, SYSCALL_MMAP	;	rax = mmap(rdi:(mapped address), rsi:length, rdx:(protection flags), r10:(flags), r8:(file descriptor), r9:(offset)):(success:(mapped address), error:-1);
 	xor rdi, rdi		;	(rdi:(mapped address) ^= rdi):(rdi = 0);//entrust addressing to OS
 	mov rsi, MMAP_UNIT	;		//length
@@ -117,8 +119,7 @@ _start:				;int main(void)
 	syscall			;
 	test rax, rax		;	if(rax != 0)goto .mumap_error;
 	jnz .mumap_error	;
-	cmp qword[stat.st_size], r9;	if(stat->st_size > r9)goto .mmap;
-	ja .mmap		;
+	jmp .mmap		;	goto .mmap;
 .close:				;.close:
 	pop rdi			;	rdi = *rsp:(file descriptor); rsp += 8;
 	mov rax, SYSCALL_CLOSE	;	rax = close(rdi:(file descriptor)):(success:0, error:-1);
