@@ -84,6 +84,24 @@ stat:
 			dq 0x0000000000000000 ;fstat overwritten region
 
 stat_st_dev_message: db 'stat.st_dev:', CHAR_NULL ;char *stat_st_dev_message = "stat.st_dev";
+stat_st_ino_message: db 'stat.st_ino:', CHAR_NULL ;char *stat_st_ino_message = "stat.st_ino";
+stat_st_nlink_message: db 'stat.st_nlink:', CHAR_NULL ;char *stat_st_nlink_message = "stat.st_nlink";
+stat_st_mode_message: db 'stat.st_mode:', CHAR_NULL ;char *stat_st_mode_message = "stat.st_mode";
+stat_st_uid_message: db 'stat.st_uid:', CHAR_NULL ;char *stat_st_uid_message = "stat.st_uid";
+stat_st_gid_message: db 'stat.st_gid:', CHAR_NULL ;char *stat_st_gid_message = "stat.st_gid";
+stat_st_rev_message: db 'stat.st_rev:', CHAR_NULL ;char *stat_st_rev_message = "stat.st_rev";
+stat_st_size_message: db 'stat.st_size:', CHAR_NULL ;char *stat_st_size_message = "stat.st_size";
+stat_st_blksize_message: db 'stat.st_blksize:', CHAR_NULL ;char *stat_st_blksize_message = "stat.st_blksize";
+stat_st_blocks_message: db 'stat.st_blocks:', CHAR_NULL ;char *stat_st_blocks_message = "stat.st_blocks";
+stat_st_atim_tv_sec_message: db 'stat.st_atim.tv_sec:', CHAR_NULL ;char *stat_st_atim_message = "stat.st_atim";
+stat_st_atim_tv_nsec_message: db 'stat.st_atim.tv_nsec:', CHAR_NULL ;char *stat_st_atim_message = "stat.st_atim";
+stat_st_mtim_tv_sec_message: db 'stat.st_mtim.tv_sec:', CHAR_NULL ;char *stat_st_mtim_message = "stat.st_mtim";
+stat_st_mtim_tv_nsec_message: db 'stat.st_mtim.tv_nsec:', CHAR_NULL ;char *stat_st_mtim_message = "stat.st_mtim";
+stat_st_ctim_tv_sec_message: db 'stat.st_ctim.tv_sec:', CHAR_NULL ;char *stat_st_ctim_message = "stat.st_ctim";
+stat_st_ctim_tv_nsec_message: db 'stat.st_ctim.tv_nsec:', CHAR_NULL ;char *stat_st_ctim_message = "stat.st_ctim";
+stat_glibc_reserved_0_message: db 'stat.__glibc_reserved[0]:', CHAR_NULL ;char *stat_st_dev_message = "stat.st_dev";
+stat_glibc_reserved_1_message: db 'stat.__glibc_reserved[1]:', CHAR_NULL ;char *stat_st_dev_message = "stat.st_dev";
+stat_glibc_reserved_2_message: db 'stat.__glibc_reserved[2]:', CHAR_NULL ;char *stat_st_dev_message = "stat.st_dev";
 
 no_file_name_message: db 'NO FILE NAME!', CHAR_NEWLINE, CHAR_NULL ;char *no_file_name_message = "NO FILE NAME!\n";
 close_error_message: db 'CLOSE ERROR!', CHAR_NEWLINE, CHAR_NULL ;char *close_error_message = "CLOSE ERROR!\n";
@@ -228,9 +246,16 @@ _start:					;int main(int argc, char **argv)
 	syscall				;	rax = fstat(rdi/*file descriptor*/, rsi/*stat struct addr*/)/*success:0, error:negative*/;
 	test rax, rax			;
 	jnz .fstat_error		;	if(rax != 0)goto .fstat_error;
+.print_stat_st_dev:			;.print_stat_st_dev:
 	mov rdi, stat_st_dev_message	;
 	call print_string		;	print_string(stat_st_dev_message);
 	mov rdi, qword[stat.st_dev]	;
+	call print_int			;	print_int(stat->st_dev);
+	call print_newline		;	print_newline();
+.print_stat_st_ino:			;.print_stat_st_ino:
+	mov rdi, stat_st_ino_message	;
+	call print_string		;	print_string(stat_st_ino_message);
+	mov rdi, qword[stat.st_ino]	;
 	call print_int			;	print_int(stat->st_dev);
 	call print_newline		;	print_newline();
 .close:					;.close:
