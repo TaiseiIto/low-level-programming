@@ -11,7 +11,8 @@ global _start
 section .data
 
 ;/usr/include/x86_64-linux-gnu/bits/stat.h
-;struct stat //x86-64
+;//x86_64
+;struct stat
 ;  {
 ;    __dev_t st_dev;		/* Device.  */
 ;    __ino_t st_ino;		/* File serial number.	*/
@@ -29,6 +30,14 @@ section .data
 ;    struct timespec st_ctim;	/* Time of last status change.  */
 ;    __syscall_slong_t __glibc_reserved[3];
 ;  };
+
+;/usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h
+;//x86_64
+;struct timespec
+;{
+;  __time_t tv_sec;		/* Seconds.  */
+;  __syscall_slong_t tv_nsec;	/* Nanoseconds.  */
+;};
 
 no_file_name_message: db 'NO FILE NAME!', CHAR_NEWLINE, CHAR_NULL ;char *no_file_name_message = "NO FILE NAME!\n";
 close_error_message: db 'CLOSE ERROR!', CHAR_NEWLINE, CHAR_NULL ;char *close_error_message = "CLOSE ERROR!\n";
