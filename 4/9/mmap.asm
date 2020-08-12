@@ -17,12 +17,12 @@ global _start
 
 section .data
 
-close_failure_message: db 'CLOSE FAILURE!', CHAR_NEWLINE, CHAR_NULL;char * const close_failure_message = "CLOSE FAILURE!\n";
-mmap_failure_message: db 'MMAP_FAILURE!', CHAR_NEWLINE, CHAR_NULL;char * const mmap_failure_message = "MMAP FAILURE!\n";
-mumap_failure_message: db 'MUMAP_FAILURE!', CHAR_NEWLINE, CHAR_NULL;char * const mumap_failure_message = "MUMAP FAILURE!\n";
+close_error_message: db 'CLOSE ERROR!', CHAR_NEWLINE, CHAR_NULL;char * const close_error_message = "CLOSE error!\n";
+mmap_error_message: db 'MMAP ERROR!', CHAR_NEWLINE, CHAR_NULL;char * const mmap_error_message = "MMAP error!\n";
+mumap_error_message: db 'MUMAP ERROR!', CHAR_NEWLINE, CHAR_NULL;char * const mumap_error_message = "MUMAP error!\n";
 no_file_name_message: db 'NO FILE NAME!', CHAR_NEWLINE, CHAR_NULL;char * const no_file_name_message = "NO FILE NAME!\n";
-open_failure_message: db 'OPEN FAILURE!', CHAR_NEWLINE, CHAR_NULL;char * const open_failure_message = "OPEN FAILURE!\n";
-write_failure_message: db 'WRITE_FAILURE!', CHAR_NEWLINE, CHAR_NULL;char * const write_failure_message = "WRITE FAILURE!\n";
+open_error_message: db 'OPEN ERROR!', CHAR_NEWLINE, CHAR_NULL;char * const open_error_message = "OPEN error!\n";
+write_error_message: db 'WRITE ERROR!', CHAR_NEWLINE, CHAR_NULL;char * const write_error_message = "WRITE error!\n";
 
 section .text
 
@@ -32,7 +32,7 @@ error_message:			;void error_message(char *rdi:message)
 	mov rsi, -1		;	rsi:(max length) = -1;
 	call string_length	;
 	mov rdx, rax		;	rdx = rax:string_length(rdi:message, rsi:(max length));
-	mov rax, SYSCALL_WRITE	;	write(rdi:stdout, rsi:open_failure_message, rdx:string_length(open_failure_message));
+	mov rax, SYSCALL_WRITE	;	write(rdi:stdout, rsi:open_error_message, rdx:string_length(open_error_message));
 	mov rdi, STDERR		;
 	pop rsi			;	rsi = *rsp:message; rsp += 8;
 	syscall			;
@@ -46,26 +46,26 @@ _start:				;int main(void)
 	cmp qword[rsp], 1	;	if(argc == 1)goto .no_file_name;//argc == qword[rsp]
 	je .no_file_name	;
 .open:				;.open:
-	mov rax, SYSCALL_OPEN	;	rax = open(rdi:file_name, rsi:0/*Read Only*/, rdx:0/*permission mode when the file is created*/):(success:(file descriptor), failure:-1);
+	mov rax, SYSCALL_OPEN	;	rax = open(rdi:file_name, rsi:0/*Read Only*/, rdx:0/*permission mode when the file is created*/):(success:(file descriptor), error:-1);
 	mov rdi, qword[rsp + 16];		//argv[n] == qword[rsp + 8 + 8 * n];
 	xor rsi, rsi		;		//Read Only
 	xor rdx, rdx		;		//permission mode when the file is created
 	syscall			;
-	cmp rax, 0		;	if(rax < 0)goto .open_failure
-	jl .open_failure	;
+	cmp rax, 0		;	if(rax < 0)goto .open_error
+	jl .open_error	;
 	push rax		;	*(rsp -= 8) = (file descriptor);
 	xor r9, r9		;	(r9:(mmap offset) ^= r9):(r9 =0);
 .mmap:				;.mmap:
-	mov rax, SYSCALL_MMAP	;	rax = mmap(rdi:(mapped address), rsi:length, rdx:(protection flags), r10:(flags), r8:(file descriptor), r9:(offset)):(success:(mapped address), failure:-1);
+	mov rax, SYSCALL_MMAP	;	rax = mmap(rdi:(mapped address), rsi:length, rdx:(protection flags), r10:(flags), r8:(file descriptor), r9:(offset)):(success:(mapped address), error:-1);
 	xor rdi, rdi		;	(rdi:(mapped address) ^= rdi):(rdi = 0);//entrust addressing to OS
 	mov rsi, MMAP_UNIT	;		//length
 	mov rdx, PROT_READ	;		//read only
 	mov r10, MAP_PRIVATE	;		//unshared among processes
 	mov r8, qword[rsp]	;		//file descriptor
 	syscall			;
-	mov rdx, -1		;	if(rax:(mapped address) == -1)goto .mmap_failure;
+	mov rdx, -1		;	if(rax:(mapped address) == -1)goto .mmap_error;
 	cmp rax, rdx		;
-	je .mmap_failure	;
+	je .mmap_error	;
 	push rax		;	*(rsp -= 8) = rax:(mapped address);
 	add r9, MMAP_UNIT	;	r9:(mmap offset) += MMAP_UNIT;
 	push r9			;	*(rsp -= 8) = r9:(mmap offset);
@@ -79,37 +79,37 @@ _start:				;int main(void)
 	syscall			;	rax = write(rdi:stdout, rsi:(mapped address), rdx:length);
 .mumap:				;.mumap:
 	pop r9			;	r9 = *rsp:(mmap offset); rsp += 8;
-	mov rax, SYSCALL_MUMAP	;	rax = mumap(rdi:(mapped address), rsi:length):(success:0, failure:-1);
+	mov rax, SYSCALL_MUMAP	;	rax = mumap(rdi:(mapped address), rsi:length):(success:0, error:-1);
 	pop rdi			;	rdi = *rsp:(mapped address); rsp += 8;
 	mov rsi, MMAP_UNIT	;		//length
 	syscall			;
-	test rax, rax		;	if(rax != 0)goto .mumap_failure;
-	jnz .mumap_failure	;
+	test rax, rax		;	if(rax != 0)goto .mumap_error;
+	jnz .mumap_error	;
 	cmp rdx, MMAP_UNIT	;	if(rdx:(mapped string length) == MMAP_UNIT)goto .mmap;
 	je .mmap		;
 .close:				;.close:
 	pop rdi			;	rdi = *rsp:(file descriptor); rsp += 8;
-	mov rax, SYSCALL_CLOSE	;	rax = close(rdi:(file descriptor)):(success:0, failure:-1);
+	mov rax, SYSCALL_CLOSE	;	rax = close(rdi:(file descriptor)):(success:0, error:-1);
 	syscall			;
-	test rax, rax		;	if(rax != 0)goto .close_failure;
-	jnz .close_failure	;
+	test rax, rax		;	if(rax != 0)goto .close_error;
+	jnz .close_error	;
 	mov rax, SYSCALL_EXIT	;	exit(0);
 	xor rdi, rdi		;
 	syscall			;
-.close_failure:			;.close_failure:
-	mov rdi, close_failure_message;	error_message(close_failure_message);
+.close_error:			;.close_error:
+	mov rdi, close_error_message;	error_message(close_error_message);
 	call error_message	;
-.mmap_failure:			;.mmap_failure:
-	mov rdi, mmap_failure_message;	error_message(mmap_failure_message);
+.mmap_error:			;.mmap_error:
+	mov rdi, mmap_error_message;	error_message(mmap_error_message);
 	call error_message	;
-.mumap_failure:			;.mmap_failure:
-	mov rdi, mumap_failure_message;	error_message(mumap_failure_message);
+.mumap_error:			;.mmap_error:
+	mov rdi, mumap_error_message;	error_message(mumap_error_message);
 	call error_message	;
 .no_file_name:			;.no_file_name:
 	mov rdi, no_file_name_message; error_message(no_file_name_message);
 	call error_message	;
-.open_failure:			;.open_failure:
-	mov rdi, open_failure_message;	error_message(open_failure_message);
+.open_error:			;.open_error:
+	mov rdi, open_error_message;	error_message(open_error_message);
 	call error_message	;
 				;}
 
