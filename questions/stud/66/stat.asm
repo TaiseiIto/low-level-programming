@@ -258,6 +258,54 @@ _start:					;int main(int argc, char **argv)
 	mov rdi, qword[stat.st_ino]	;
 	call print_int			;	print_int(stat->st_dev);
 	call print_newline		;	print_newline();
+.print_stat_st_nlink:			;.print_stat_st_nlink:
+	mov rdi, stat_st_nlink_message	;
+	call print_string		;	print_string(stat_st_nlink_message);
+	mov rdi, qword[stat.st_nlink]	;
+	call print_int			;	print_int(stat->st_nlink);
+	call print_newline		;	print_newline();
+.print_stat_st_mode:			;.print_stat_st_mode:
+	mov rdi, stat_st_mode_message	;
+	call print_string		;	print_string(stat_st_mode_message);
+	mov edi, dword[stat.st_mode]	;
+	call print_int			;	print_int(stat->st_mode);
+	call print_newline		;	print_newline();
+.print_stat_st_uid:			;.print_stat_st_uid:
+	mov rdi, stat_st_uid_message	;
+	call print_string		;	print_string(stat_st_uid_message);
+	mov edi, dword[stat.st_uid]	;
+	call print_int			;	print_int(stat->st_uid);
+	call print_newline		;	print_newline();
+.print_stat_st_gid:			;.print_stat_st_gid:
+	mov rdi, stat_st_gid_message	;
+	call print_string		;	print_string(stat_st_gid_message);
+	mov edi, dword[stat.st_gid]	;
+	call print_int			;	print_int(stat->st_gid);
+	call print_newline		;	print_newline();
+.print_stat_st_rev:			;.print_stat_st_rev:
+	mov rdi, stat_st_rev_message	;
+	call print_string		;	print_string(stat_st_rev_message);
+	mov rdi, qword[stat.st_rev]	;
+	call print_int			;	print_int(stat->st_rev);
+	call print_newline		;	print_newline();
+.print_stat_st_size:			;.print_stat_st_size:
+	mov rdi, stat_st_size_message	;
+	call print_string		;	print_string(stat_st_size_message);
+	mov rdi, qword[stat.st_size]	;
+	call print_int			;	print_int(stat->st_size);
+	call print_newline		;	print_newline();
+.print_stat_st_blksize:			;.print_stat_st_blksize:
+	mov rdi, stat_st_blksize_message	;
+	call print_string		;	print_string(stat_st_blksize_message);
+	mov rdi, qword[stat.st_blksize]	;
+	call print_int			;	print_int(stat->st_blksize);
+	call print_newline		;	print_newline();
+.print_stat_st_blocks:			;.print_stat_st_blocks:
+	mov rdi, stat_st_blocks_message	;
+	call print_string		;	print_string(stat_st_blocks_message);
+	mov rdi, qword[stat.st_blocks]	;
+	call print_int			;	print_int(stat->st_blocks);
+	call print_newline		;	print_newline();
 .close:					;.close:
 	mov rax, SYSCALL_CLOSE		;
 	pop rdi				;	rdi = /*file descriptor*/;//stack
