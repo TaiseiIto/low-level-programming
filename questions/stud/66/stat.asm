@@ -348,6 +348,18 @@ _start:					;int main(int argc, char **argv)
 	mov rdi, qword[stat.__glibc_reserved_0]	;
 	call print_int			;	print_int(stat->__glibc_reserved[0]);
 	call print_newline		;	print_newline();
+.print_stat_glibc_reserved_1:		;.print_stat_st_glibc_recerved_1:
+	mov rdi, stat_glibc_reserved_1_message;
+	call print_string		;	print_string(stat_glibc_reserved_1_message);
+	mov rdi, qword[stat.__glibc_reserved_1]	;
+	call print_int			;	print_int(stat->__glibc_reserved[1]);
+	call print_newline		;	print_newline();
+.print_stat_glibc_reserved_2:		;.print_stat_st_glibc_recerved_2:
+	mov rdi, stat_glibc_reserved_2_message;
+	call print_string		;	print_string(stat_glibc_reserved_2_message);
+	mov rdi, qword[stat.__glibc_reserved_2]	;
+	call print_int			;	print_int(stat->__glibc_reserved[2]);
+	call print_newline		;	print_newline();
 .close:					;.close:
 	mov rax, SYSCALL_CLOSE		;
 	pop rdi				;	rdi = /*file descriptor*/;//stack
