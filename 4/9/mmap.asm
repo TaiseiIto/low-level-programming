@@ -75,7 +75,7 @@ _start:				;int main(void)
 	call string_length	;	rax = string_length(rdi:(mapped address), rsi:MMAP_UNIT);
 	mov rdx, rax		;	rdx = rax:(mapped string length);
 	mov rax, SYSCALL_WRITE	;	rax = SYSCALL_WRITE;
-	mov rsi, rdi		;	rsi = rdi:(mapped assress);
+	mov rsi, qword[rsp + 8]	;	rsi = rsp[1]:(mapped address);
 	mov rdi, STDOUT		;	rdi = STDOUT;
 	syscall			;	rax = write(rdi:stdout, rsi:(mapped address), rdx:length);
 .mumap:				;.mumap:
