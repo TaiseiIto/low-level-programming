@@ -306,6 +306,42 @@ _start:					;int main(int argc, char **argv)
 	mov rdi, qword[stat.st_blocks]	;
 	call print_int			;	print_int(stat->st_blocks);
 	call print_newline		;	print_newline();
+.print_stat_st_atim.tv_sec:		;.print_stat_st_atim.tv_sec:
+	mov rdi, stat_st_atim_tv_sec_message;
+	call print_string		;	print_string(stat_st_atim_tv_sec_message);
+	mov rdi, qword[stat.st_atim.tv_sec];
+	call print_int			;	print_int(stat->st_atim.tv_sec);
+	call print_newline		;	print_newline();
+.print_stat_st_atim.tv_nsec:		;.print_stat_st_atim.tv_nsec:
+	mov rdi, stat_st_atim_tv_nsec_message;
+	call print_string		;	print_string(stat_st_atim_tv_nsec_message);
+	mov rdi, qword[stat.st_atim.tv_nsec];
+	call print_int			;	print_int(stat->st_atim.tv_nsec);
+	call print_newline		;	print_newline();
+.print_stat_st_mtim.tv_sec:		;.print_stat_st_mtim.tv_sec:
+	mov rdi, stat_st_mtim_tv_sec_message;
+	call print_string		;	print_string(stat_st_mtim_tv_sec_message);
+	mov rdi, qword[stat.st_mtim.tv_sec];
+	call print_int			;	print_int(stat->st_mtim.tv_sec);
+	call print_newline		;	print_newline();
+.print_stat_st_mtim.tv_nsec:		;.print_stat_st_mtim.tv_nsec:
+	mov rdi, stat_st_mtim_tv_nsec_message;
+	call print_string		;	print_string(stat_st_mtim_tv_nsec_message);
+	mov rdi, qword[stat.st_mtim.tv_nsec];
+	call print_int			;	print_int(stat->st_mtim.tv_nsec);
+	call print_newline		;	print_newline();
+.print_stat_st_ctim.tv_sec:		;.print_stat_st_ctim.tv_sec:
+	mov rdi, stat_st_ctim_tv_sec_message;
+	call print_string		;	print_string(stat_st_ctim_tv_sec_message);
+	mov rdi, qword[stat.st_ctim.tv_sec];
+	call print_int			;	print_int(stat->st_ctim.tv_sec);
+	call print_newline		;	print_newline();
+.print_stat_st_ctim.tv_nsec:		;.print_stat_st_ctim.tv_nsec:
+	mov rdi, stat_st_ctim_tv_nsec_message;
+	call print_string		;	print_string(stat_st_ctim_tv_nsec_message);
+	mov rdi, qword[stat.st_ctim.tv_nsec];
+	call print_int			;	print_int(stat->st_ctim.tv_nsec);
+	call print_newline		;	print_newline();
 .close:					;.close:
 	mov rax, SYSCALL_CLOSE		;
 	pop rdi				;	rdi = /*file descriptor*/;//stack
