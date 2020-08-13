@@ -1,5 +1,7 @@
 %define CHAR_NEWLINE 0x0a
+%define CHAR_NINE 0x39
 %define CHAR_NULL 0x00
+%define CHAR_ZERO 0x30
 %define MAP_PRIVATE 0x0000000000000002
 %define PROT_READ 0x0000000000000001
 %define STDERR 0x0000000000000002
@@ -22,6 +24,8 @@ error_message:
 .mmap: db 'MMAP ERROR!', CHAR_NEWLINE, CHAR_NULL ;char *error_message.mmap = "MMAP ERROR!\n";
 .mumap: db 'MUMAP ERROR!', CHAR_NEWLINE, CHAR_NULL ;char *error_message.mumap = "MUMAP ~RROR!\n";
 .open: db 'OPEN ERROR!', CHAR_NEWLINE, CHAR_NULL ;char *error_message.open = "OPEN ERROR!\n";
+.too_big: db 'TOO BIG!', CHAR_NEWLINE, CHAR_NULL ;char *error_message.too_big = "TOO BIG!\n";
+
 input_file_name: db 'input.txt', CHAR_NULL ;char *input_file_name = "input.txt";
 
 stat:
@@ -64,6 +68,41 @@ error:				;void error(char *rdi:error_message)
 	syscall			;	exit(rdi:1);
 				;}
 
+parse_uint:			;unsigned long parse_uint(char *rdi:string)
+				;{
+	xor rax, rax		;	rax/*parsed integer*/ = 0;
+	mov r8, 10		;	r8/*decimal parse*/ = 10;
+.check_8_bytes:			;.check_8_bytes:
+	mov rdx, qword[rdi]	;	unsigned long rdx/*8 bytes of string*/ = *(long *)rdi:string;
+	xor rcx, rcx		;	rcx/*num of checked bytes in rdx*/ = 0;
+.check_1_byte:			;.check_1_byte:
+	test dl, CHAR_ZERO	;
+	jb .end			;	if(dl < '0')goto .end;
+	test dl, CHAR_NINE	;
+	ja .end			;	if('9' < dl)goto .end;
+	push rdx		;	//rsp /*8 bytes of string*/
+	mul r8			;	(rdx:rax) = r8:10 * rax;
+	test rdx, rdx		;
+	jnz .too_big		;	if(rdx != 0)goto .too_big;
+	pop rdx			;	rdx = (8 bytes of string);//rsp
+	mov r9, rdx		;	r9/*1 digit*/ = rdx/*8 bytes of string*/;
+	and r9, 0xff		;	r9/*1 digit*/ &= 0xff;
+	sub r9, CHAR_ZERO	;	r9/*1 digit*/ -= '0';
+	add rax, r9		;	rax/*parsed integer*/ += r9/*1 digit*/;
+	jc .too_big		;	if(carry flag)goto .too_big;
+	shr rdx, 8		;	rdx >>= 8;
+	inc rcx			;	rcx/*num of checked bytes in rdx*/++;
+	cmp rcx, 8		;
+	jne .check_1_byte	;	if(rcx/*num of checked bytes in rdx*/ != 8)goto .check_1_byte:
+	add rdi, 8		;	rdi:string += 8;
+	jmp .check_8_bytes	;	goto .check_8_bytes;
+.end:				;.end:
+	ret			;	return rax;
+.too_big:			;.too_big:
+	mov rdi, error_message.too_big;
+	call error		;	error(error_message.too_big:"TOO BIG!\n");
+				;}
+
 _start:				;int main(void)
 				;{
 .open:				;.open:
@@ -94,6 +133,9 @@ _start:				;int main(void)
 	cmp rax, 0		;
 	jl .mmap_error		;	if(rax < 0)goto .mmap_error;
 	push rax		;	//rsp (mapped address) (file descriptor) argc argv[0]
+.parse_uint:			;.parse_uint:
+	mov rdi, qword[rsp]	;
+	call parse_uint		;	rax = parse_uint(rdi/*mapped address*/);
 .mumap:				;.mumap:
 	mov rax, SYSCALL_MUMAP	;
 	pop rdi			;	rdi = (mapped address); //rsp (file descriptor) argc argv[0]
