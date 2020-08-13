@@ -68,23 +68,32 @@ error:				;void error(char *rdi:error_message)
 	syscall			;	exit(rdi:1);
 				;}
 
-factorial:			;unsigned long factorial(unsigned long rdi:x)
+is_prime:			;bool is_prime(unsigned long rdi:n)
 				;{
-	test rdi, rdi		;
-	jz .return_1		;	if(rdi:x == 0)goto .return_1;
-	sub rdi, 1		;	rdi:x -= 1;
-	call factorial		;	rax = factorial(rdi:(x - 1));
-	add rdi, 1		;	rdi:(x - 1) += 1;
-	mul rdi			;	(rdx:rax) = rax:factorial(x - 1) * rdi:x;
+	cmp rdi, 1		;
+	je .return_false	;	if(rdi:n == 1)goto .return_false;
+	cmp rdi, 2		;
+	je .return_true		;	if(rdi:n == 2)goto .return_true;
+	test rdi, 1		;
+	jz .return_false	;	if(rdi:n % 2 == 0)goto .return_false;
+	mov rcx, 3		;	rcx/*divisor*/ = 3;
+.division:			;.division:
+	mov rax, rcx		;	rax = rcx/*divisor*/;
+	mul rcx			;	(rdx:rax) = rax/*divisor*/ * rcx/*divisor*/;
+	cmp rax, rdi		;
+	ja .return_true		;	if(rax/*divisor^2*/ > rdi:n)goto .return_true;
+	mov rax, rdi		;	rax = rdi:n;
+	div rcx			;	(new rax) = (old rax):n / rcx/*divisor*/; (new rdx) = (old rax):n % rcx/*divisor*/;
 	test rdx, rdx		;
-	jnz .too_big		;	if(rdx != 0)goto .too_big;
-	ret			;	return rax:(factorial(x));
-.return_1:			;.return_1:
+	jz .return_false	;	if(rdx/*remainder*/ == 0)goto .return_false;
+	add rcx, 2		;	rcx/*divisor*/ += 2;
+	jmp .division		;	goto .division:
+.return_true:			;.return_true:
 	mov rax, 1		;
 	ret			;	return 1;
-.too_big:			;.too_big:
-	mov rdi, error_message.too_big;
-	call error		;	error(error_message.too_big:"TOO BIG!\n");
+.return_false:			;.return_false:
+	xor rax, rax		;
+	ret			;	return 0;
 				;}
 
 parse_uint:			;unsigned long parse_uint(char *rdi:string)
@@ -230,12 +239,12 @@ _start:				;int main(void)
 .parse_uint:			;.parse_uint:
 	mov rdi, qword[rsp]	;
 	call parse_uint		;	rax = parse_uint(rdi/*mapped address*/);
-.factorial:			;.factorial:
+.is_prime:			;.is_prime:
 	mov rdi, rax		;
-	call factorial		;	rax = factorial(rdi/*parsed integer*/);
+	call is_prime		;	rax = is_prime(rdi/*parsed integer*/);
 .print_uint:			;.print_uint:
 	mov rdi, rax		;
-	call print_uint		;	print_uint(rdi/*factorial num*/);
+	call print_uint		;	print_uint(rdi/*is_prime*/);
 	call print_newline	;	print_newline();
 .mumap:				;.mumap:
 	mov rax, SYSCALL_MUMAP	;
