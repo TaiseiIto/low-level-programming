@@ -134,6 +134,7 @@ print_char:			;void print_char(char rdi:character)
 	mov rsi, rsp		;	//string address
 	mov rdx, 1		;	//length
 	syscall			;	rax = write(stdout/*file descriptor*/, rsp:&character/*string*/, 1/*length*/)/*success:num of written bytes, error:negative*/;
+	pop rdi			;	rdi = character; //rsp
 	cmp rax, 1		;
 	jne .write_error	;	if(rax != 1)goto .write_error;
 	ret			;	return;
