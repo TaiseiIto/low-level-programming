@@ -26,6 +26,7 @@ error_message:
 .no_file_name: db 'NO FILE NAME!', CHAR_NEWLINE, CHAR_NULL ;char *error_message.no_file_name = "NO FILE NAME!\n";
 .open: db 'OPEN ERROR!', CHAR_NEWLINE, CHAR_NULL ;char *error_message.open = "OPEN ERROR!\n";
 .too_big: db 'TOO BIG!', CHAR_NEWLINE, CHAR_NULL ;char *error_message.too_big = "TOO BIG!\n";
+.write: db 'WRITE ERROR!', CHAR_NEWLINE, CHAR_NULL ;char *error_message.write = "WRITE ERROR!\n";
 
 stat:
 			dq 0x0000000000000000
@@ -121,6 +122,28 @@ parse_uint:			;unsigned long parse_uint(char *rdi:string)
 	call error		;	error(error_message.too_big:"TOO BIG!\n");
 				;}
 
+print_newline:			;void print_newline(void)
+				;{
+	mov rdi, CHAR_NEWLINE	;	rdi = '\n';
+
+print_char:			;void print_char(char rdi:character)
+				;{
+	push rdi		;	//rsp (character)
+	mov rax, SYSCALL_WRITE	;
+	mov rdi, STDOUT		;	//destination file descriptor
+	mov rsi, rsp		;	//string address
+	mov rdx, 1		;	//length
+	syscall			;	rax = write(stdout/*file descriptor*/, rsp:&character/*string*/, 1/*length*/)/*success:num of written bytes, error:negative*/;
+	cmp rax, 1		;
+	jne .write_error	;	if(rax != 1)goto .write_error;
+	ret			;	return;
+.write_error:			;.write_error:
+	mov rdi, error_message.write;
+	call error		;	error(error_message.write:"WRITE ERROR!\n");
+				;} //end of print_char
+
+				;}//end of print_newline
+
 print_uint:			;void print_uint(unsigned long rdi:integer)
 				;{
 	push rbp		;	//rsp (old rbp)
@@ -162,8 +185,13 @@ print_uint:			;void print_uint(unsigned long rdi:integer)
 	mov rdi, STDOUT		;
 	pop rsi			;	rsi = (string address); //rsp (last 8 digits)
 	syscall			;	rax = write(rdi:stdout, rsi:string, rdx/*string length*/)/*success:num of written bytes, error:negative*/;
+	cmp rax, rdx		;
+	jne .write_error	;	if(rax/*num of written bytes*/ == rdx/*string length*/)goto .write_error;
 	leave			;	rsp = rbp; rbp = *rsp/*old rbp*/; rsp += 8;
 	ret			;	return;
+.write_error:			;.write_error:
+	mov rdi, error_message.write;
+	call error		;	error(error_message.write:"WRITE ERROR!\n");
 				;}
 
 _start:				;int main(void)
@@ -207,6 +235,7 @@ _start:				;int main(void)
 .print_uint:			;.print_uint:
 	mov rdi, rax		;
 	call print_uint		;	print_uint(rdi/*factorial num*/);
+	call print_newline	;	print_newline();
 .mumap:				;.mumap:
 	mov rax, SYSCALL_MUMAP	;
 	pop rdi			;	rdi = (mapped address); //rsp (file descriptor) argc argv[0]
