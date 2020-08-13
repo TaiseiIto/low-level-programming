@@ -22,11 +22,10 @@ error_message:
 .close: db 'CLOSE ERROR!', CHAR_NEWLINE, CHAR_NULL ;char *error_message.close = "CLOSE ERROR!\n";
 .fstat: db 'FSTAT ERROR!', CHAR_NEWLINE, CHAR_NULL ;char *error_message.fstat = "FSTAT ERROR!\n";
 .mmap: db 'MMAP ERROR!', CHAR_NEWLINE, CHAR_NULL ;char *error_message.mmap = "MMAP ERROR!\n";
-.mumap: db 'MUMAP ERROR!', CHAR_NEWLINE, CHAR_NULL ;char *error_message.mumap = "MUMAP ~RROR!\n";
+.mumap: db 'MUMAP ERROR!', CHAR_NEWLINE, CHAR_NULL ;char *error_message.mumap = "MUMAP ERROR!\n";
+.no_file_name: db 'NO FILE NAME!', CHAR_NEWLINE, CHAR_NULL ;char *error_message.no_file_name = "NO FILE NAME!\n";
 .open: db 'OPEN ERROR!', CHAR_NEWLINE, CHAR_NULL ;char *error_message.open = "OPEN ERROR!\n";
 .too_big: db 'TOO BIG!', CHAR_NEWLINE, CHAR_NULL ;char *error_message.too_big = "TOO BIG!\n";
-
-input_file_name: db 'input.txt', CHAR_NULL ;char *input_file_name = "input.txt";
 
 stat:
 			dq 0x0000000000000000
@@ -170,11 +169,13 @@ print_uint:			;void print_uint(unsigned long rdi:integer)
 _start:				;int main(void)
 				;{
 .open:				;.open:
+	cmp qword[rsp], 1	;
+	je .no_file_name	;	if(argc == 1)goto .no_file_name;
 	mov rax, SYSCALL_OPEN	;
-	mov rdi, input_file_name;	//"input.txt"
+	mov rdi, qword[rsp + 16];	//argv[n] == qword[rsp + 8 * n + 8]
 	xor rsi, rsi		;	//read only
 	xor rdx, rdx		;	//file mode when the file is created novelly
-	syscall			;	rax = open(rdi:input_file_name:"input.txt"/*file name*/, rsi:0:O_RDONLY/*read only*/, rdx:0/*possessor, possessor group and the other users can't read, write and execute the file created novely*/)/*success:file descriptor, error:negative*/;
+	syscall			;	rax = open(rdi/*file name*/, rsi:0:O_RDONLY/*read only*/, rdx:0/*possessor, possessor group and the other users can't read, write and execute the file created novely*/)/*success:file descriptor, error:negative*/;
 	cmp rax, 0		;
 	jl .open_error		;	if(rax < 0)goto .open_error;
 	push rax		;	//rsp (file descriptor) argc argv[0]
@@ -235,6 +236,9 @@ _start:				;int main(void)
 .mumap_error:			;.mumap_error:
 	mov rdi, error_message.mumap;
 	call error		;	error(error_message.mumap:"MUMAP ERROR!\n");
+.no_file_name:			;.no_file_name:
+	mov rdi, error_message.no_file_name;
+	call error		;	error(error_message.no_file_name:"NO FILE NAME!\n");
 .open_error:			;.open_error:
 	mov rdi, error_message.open;
 	call error		;	error(error_message.open:"OPEN ERROR!\n");
