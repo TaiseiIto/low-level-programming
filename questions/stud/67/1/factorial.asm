@@ -68,6 +68,25 @@ error:				;void error(char *rdi:error_message)
 	syscall			;	exit(rdi:1);
 				;}
 
+factorial:			;unsigned long factorial(unsigned long rdi:x)
+				;{
+	test rdi, rdi		;
+	jz .return_1		;	if(rdi:x == 0)goto .return_1;
+	sub rdi, 1		;	rdi:x -= 1;
+	call factorial		;	rax = factorial(rdi:(x - 1));
+	add rdi, 1		;	rdi:(x - 1) += 1;
+	mul rdi			;	(rdx:rax) = rax:factorial(x - 1) * rdi:x;
+	test rdx, rdx		;
+	jnz .too_big		;	if(rdx != 0)goto .too_big;
+	ret			;	return rax:(factorial(x));
+.return_1:			;.return_1:
+	mov rax, 1		;
+	ret			;	return 1;
+.too_big:			;.too_big:
+	mov rdi, error_message.too_big;
+	call error		;	error(error_message.too_big:"TOO BIG!\n");
+				;}
+
 parse_uint:			;unsigned long parse_uint(char *rdi:string)
 				;{
 	xor rax, rax		;	rax/*parsed integer*/ = 0;
@@ -180,9 +199,12 @@ _start:				;int main(void)
 .parse_uint:			;.parse_uint:
 	mov rdi, qword[rsp]	;
 	call parse_uint		;	rax = parse_uint(rdi/*mapped address*/);
+.factorial:			;.factorial:
+	mov rdi, rax		;
+	call factorial		;	rax = factorial(rdi/*parsed integer*/);
 .print_uint:			;.print_uint:
 	mov rdi, rax		;
-	call print_uint		;	print_uint(rdi/*parsed integer*/);
+	call print_uint		;	print_uint(rdi/*factorial num*/);
 .mumap:				;.mumap:
 	mov rax, SYSCALL_MUMAP	;
 	pop rdi			;	rdi = (mapped address); //rsp (file descriptor) argc argv[0]
