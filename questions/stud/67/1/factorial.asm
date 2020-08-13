@@ -76,9 +76,9 @@ parse_uint:			;unsigned long parse_uint(char *rdi:string)
 	mov rdx, qword[rdi]	;	unsigned long rdx/*8 bytes of string*/ = *(long *)rdi:string;
 	xor rcx, rcx		;	rcx/*num of checked bytes in rdx*/ = 0;
 .check_1_byte:			;.check_1_byte:
-	test dl, CHAR_ZERO	;
+	cmp dl, CHAR_ZERO	;
 	jb .end			;	if(dl < '0')goto .end;
-	test dl, CHAR_NINE	;
+	cmp dl, CHAR_NINE	;
 	ja .end			;	if('9' < dl)goto .end;
 	push rdx		;	//rsp /*8 bytes of string*/
 	mul r8			;	(rdx:rax) = r8:10 * rax;
