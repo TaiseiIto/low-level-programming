@@ -156,7 +156,8 @@ print_uint:			;void print_uint(unsigned long rdi:integer)
 	mov rdi, rsp		;	rdi/*string address*/ = rsp/*last 8 digits address*/;
 	add rdi, rax		;	rdi/*string address*/ += rax/*num of shift*/;
 	push rdi		;	//rsp (string address) (last 8 digits)
-	call string_length	;	rax = string_length(rdi/*string*/);
+	mov rsi, -1		;
+	call string_length	;	rax = string_length(rdi/*string*/, rsi:-1/*max length*/);
 	mov rdx, rax		;	rdx = rax/*string length*/
 	mov rax, SYSCALL_WRITE	;
 	mov rdi, STDOUT		;
