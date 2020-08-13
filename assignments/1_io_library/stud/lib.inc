@@ -52,6 +52,10 @@ print_string:			;unsigned long:(num of written bytes) print_string(char *rdi:str
     ret				;	return rax:(num of written bytes);
 				;}
 
+print_newline:			;unsigned long:(num of written bytes):1 print_newline(void)//print '\n' to stdout
+				;{
+    mov rdi, char_new_line	;	rdi = '\n';
+
 print_char:			;unsigned long:(num of written bytes):1 print_char(char rdi:character)//print char to stdout
 				;{
     push rdi			;	*(rsp -= 8) = rdi:character;
@@ -64,10 +68,6 @@ print_char:			;unsigned long:(num of written bytes):1 print_char(char rdi:charac
     ret				;	return rax:(num of written bytes):1;
 				;}
 
-print_newline:			;unsigned long:(num of written bytes):1 print_newline(void)//print '\n' to stdout
-				;{
-    mov rdi, char_new_line	;	rdi = '\n';
-    jmp print_char		;	return print_char(rdi:'\n');
 				;}
 
 print_int:			;void print_int(long rdi:integer)//print integer by decimal system
