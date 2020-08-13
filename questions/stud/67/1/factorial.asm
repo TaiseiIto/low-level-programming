@@ -4,6 +4,7 @@
 %define STDOUT 0x0000000000000001
 %define SYSCALL_CLOSE 0x0000000000000003
 %define SYSCALL_EXIT 0x000000000000003c
+%define SYSCALL_FSTAT 0x0000000000000005
 %define SYSCALL_MMAP 0x0000000000000009
 %define SYSCALL_MUMAP 0x0000000000000011
 %define SYSCALL_OPEN 0x0000000000000002
@@ -13,11 +14,34 @@ global _start
 
 section .data
 
-input_file_name: db 'input.txt', CHAR_NULL ;char *input_file_name = "input.txt";
-
 error_message:
 .close: db 'CLOSE ERROR!', CHAR_NEWLINE, CHAR_NULL ;char *error_message.close = "CLOSE ERROR!\n";
+.fstat: db 'FSTAT ERROR!', CHAR_NEWLINE, CHAR_NULL ;char *error_message.fstat = "FSTAT ERROR!\n";
 .open: db 'OPEN ERROR!', CHAR_NEWLINE, CHAR_NULL ;char *error_message.open = "OPEN ERROR!\n";
+input_file_name: db 'input.txt', CHAR_NULL ;char *input_file_name = "input.txt";
+
+stat:
+			dq 0x0000000000000000
+.st_dev:		dq 0x0000000000000000
+.st_ino:		dq 0x0000000000000000
+.st_nlink:		dq 0x0000000000000000
+.st_mode:		dw 0x00000000
+.st_uid:		dw 0x00000000
+.st_gid:		dw 0x00000000
+.__pad0:		dw 0x00000000
+.st_rev:		dq 0x0000000000000000
+.st_size:		dq 0x0000000000000000
+.st_blksize:		dq 0x0000000000000000
+.st_blocks:		dq 0x0000000000000000
+.st_atim.tv_sec:	dq 0x0000000000000000
+.st_atim.tv_nsec:	dq 0x0000000000000000
+.st_mtim.tv_sec:	dq 0x0000000000000000
+.st_mtim.tv_nsec:	dq 0x0000000000000000
+.st_ctim.tv_sec:	dq 0x0000000000000000
+.st_ctim.tv_nsec:	dq 0x0000000000000000
+.__glibc_reserved_0:	dq 0x0000000000000000
+.__glibc_reserved_1:	dq 0x0000000000000000
+.__glibc_reserved_2:	dq 0x0000000000000000
 
 section .text
 
@@ -47,6 +71,13 @@ _start:				;int main(void)
 	cmp rax, 0		;
 	jl .open_error		;	if(rax < 0)goto .open_error;
 	push rax		;	//rsp (file descriptor) argc argv[0]
+.fstat:				;.fstat:
+	mov rax, SYSCALL_FSTAT	;
+	mov rdi, qword[rsp]	;	//file descriptor
+	mov rsi, stat		;	//stat address
+	syscall			;	rax = fstat(rdi/*file descriptor*/, rsi/*stat address*/)/*success:0, error:negative*/;
+	test rax, rax		;
+	jnz .fstat_error	;	if(rax != 0)goto .fstat_error;
 .close:				;.close:
 	mov rax, SYSCALL_CLOSE	;
 	pop rdi			;	rdi = (file descriptor); //rsp argc argv[0]
@@ -60,6 +91,9 @@ _start:				;int main(void)
 .close_error:			;.close_error:
 	mov rdi, error_message.close;
 	call error		;	error(error_message.close:"CLOSE ERROR!\n");
+.fstat_error:			;.fstat_error:
+	mov rdi, error_message.fstat;
+	call error		;	error(error_message.fstat:"FSTAT ERROR!\n");
 .open_error:			;.open_error:
 	mov rdi, error_message.open;
 	call error		;	error(error_message.open:"OPEN ERROR!\n");
