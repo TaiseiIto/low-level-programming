@@ -103,6 +103,50 @@ parse_uint:			;unsigned long parse_uint(char *rdi:string)
 	call error		;	error(error_message.too_big:"TOO BIG!\n");
 				;}
 
+print_uint:			;void print_uint(unsigned long rdi:integer)
+				;{
+	push rbp		;	//rsp (old rbp)
+	mov rbp, rsp		;	(new rbp) = rsp;
+	mov rax, rdi		;	rax = rdi/*integer*/;
+	xor rdi, rdi		;	rdi/*8 digits*/ = 0;
+	mov rcx, 1		;	rcx/*num of written digits of rdi*/ = 1;
+	mov r8, 10		;	r8/*decimal print*/ = 10;
+.write_digit:			;.write_digit:
+	xor rdx, rdx		;	rdx = 0;
+	div r8			;	(new rax) = (old (rdx:rax)) / r8:10; (new rdx) = (old (rdx:rax)) % r8:10;
+	shl rdi, 8		;	rdi/*8 digits*/ <<= 8;
+	add rdi, rdx		;	rdi/*8 digits*/ += rdx/*remainder of division by r8:10*/;
+	add rdi, CHAR_ZERO	;	rdi/*8 digits*/ += '0';
+	inc rcx			;	rcx/*num of written digits of rdi*/++;
+	test rax, rax		;
+	jz .shift_last_8_digits	;	if(rax/*integer*/ == 0)goto .shift_last_8_digits;
+	cmp rcx, 8		;
+	jnz .write_digit	;	if(rcx != 8)goto .write_1_digit;
+	push rdi		;	//rsp (new 8 digits)
+	xor rcx, rcx		;	rcx/*num of written digits of rdi*/ = 0;
+	jmp .write_digit	;	goto .write_8_digits;
+.shift_last_8_digits:		;.shift_last_8_digits:
+	cmp rcx, 8		;
+	je .print		;	if(rcx == 8)goto .search_address;
+	shl rdi, 8		;	rdi/*8 digits*/ <<= 8;
+	inc rcx			;	rcx/*num of written digits of rdi*/++;
+	inc rax			;	rax/*num of shift*/++;
+	jmp .shift_last_8_digits;	goto .shift_last_8_digit;
+.print:				;.print:
+	push rdi		;	//rsp (new 8 digits)
+	mov rdi, rsp		;	rdi/*string address*/ = rsp/*last 8 digits address*/;
+	add rdi, rax		;	rdi/*string address*/ += rax/*num of shift*/;
+	push rdi		;	//rsp (string address) (last 8 digits)
+	call string_length	;	rax = string_length(rdi/*string*/);
+	mov rdx, rax		;	rdx = rax/*string length*/
+	mov rax, SYSCALL_WRITE	;
+	mov rdi, STDOUT		;
+	pop rsi			;	rsi = (string address); //rsp (last 8 digits)
+	syscall			;	rax = write(rdi:stdout, rsi:string, rdx/*string length*/)/*success:num of written bytes, error:negative*/;
+	leave			;	rsp = rbp; rbp = *rsp/*old rbp*/; rsp += 8;
+	ret			;	return;
+				;}
+
 _start:				;int main(void)
 				;{
 .open:				;.open:
@@ -136,6 +180,9 @@ _start:				;int main(void)
 .parse_uint:			;.parse_uint:
 	mov rdi, qword[rsp]	;
 	call parse_uint		;	rax = parse_uint(rdi/*mapped address*/);
+.print_uint:			;.print_uint:
+	mov rdi, rax		;
+	call print_uint		;	print_uint(rdi/*parsed integer*/);
 .mumap:				;.mumap:
 	mov rax, SYSCALL_MUMAP	;
 	pop rdi			;	rdi = (mapped address); //rsp (file descriptor) argc argv[0]
