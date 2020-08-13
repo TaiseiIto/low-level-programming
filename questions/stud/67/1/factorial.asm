@@ -1,5 +1,7 @@
 %define CHAR_NEWLINE 0x0a
 %define CHAR_NULL 0x00
+%define MAP_PRIVATE 0x0000000000000002
+%define PROT_READ 0x0000000000000001
 %define STDERR 0x0000000000000002
 %define STDOUT 0x0000000000000001
 %define SYSCALL_CLOSE 0x0000000000000003
@@ -17,6 +19,8 @@ section .data
 error_message:
 .close: db 'CLOSE ERROR!', CHAR_NEWLINE, CHAR_NULL ;char *error_message.close = "CLOSE ERROR!\n";
 .fstat: db 'FSTAT ERROR!', CHAR_NEWLINE, CHAR_NULL ;char *error_message.fstat = "FSTAT ERROR!\n";
+.mmap: db 'MMAP ERROR!', CHAR_NEWLINE, CHAR_NULL ;char *error_message.mmap = "MMAP ERROR!\n";
+.mumap: db 'MUMAP ERROR!', CHAR_NEWLINE, CHAR_NULL ;char *error_message.mumap = "MUMAP ~RROR!\n";
 .open: db 'OPEN ERROR!', CHAR_NEWLINE, CHAR_NULL ;char *error_message.open = "OPEN ERROR!\n";
 input_file_name: db 'input.txt', CHAR_NULL ;char *input_file_name = "input.txt";
 
@@ -78,6 +82,25 @@ _start:				;int main(void)
 	syscall			;	rax = fstat(rdi/*file descriptor*/, rsi/*stat address*/)/*success:0, error:negative*/;
 	test rax, rax		;
 	jnz .fstat_error	;	if(rax != 0)goto .fstat_error;
+.mmap:				;.mmap:
+	mov rax, SYSCALL_MMAP	;
+	xor rdi, rdi		;	//entrust destination address determination to OS
+	mov rsi, qword[stat.st_size];	//size
+	mov rdx, PROT_READ	;	//readable
+	mov r10, MAP_PRIVATE	;	//unshared among other processes
+	mov r8, qword[rsp]	;	//file descriptor
+	xor r9, r9		;	//offset
+	syscall			;	rax = mmap(rdi/*dest addr*/, rsi/*size*/, rdx/*protection flags*/, r10/*flags*/, r8/*file descriptor*/, r9/*offset*/)/*success:dest addr, error:negative*/;
+	cmp rax, 0		;
+	jl .mmap_error		;	if(rax < 0)goto .mmap_error;
+	push rax		;	//rsp (mapped address) (file descriptor) argc argv[0]
+.mumap:				;.mumap:
+	mov rax, SYSCALL_MUMAP	;
+	pop rdi			;	rdi = (mapped address); //rsp (file descriptor) argc argv[0]
+	mov rsi, qword[stat.st_size];	//size
+	syscall			;	rax = mumap(rdi/*mapped address*/, rsi/*size*/)/*success:0, error:negative*/;
+	test rax, rax		;
+	jnz .mumap_error	;	if(rax != 0)goto .mumap_error;
 .close:				;.close:
 	mov rax, SYSCALL_CLOSE	;
 	pop rdi			;	rdi = (file descriptor); //rsp argc argv[0]
@@ -94,6 +117,12 @@ _start:				;int main(void)
 .fstat_error:			;.fstat_error:
 	mov rdi, error_message.fstat;
 	call error		;	error(error_message.fstat:"FSTAT ERROR!\n");
+.mmap_error:			;.mmap_error:
+	mov rdi, error_message.mmap;
+	call error		;	error(error_message.mmap:"MMAP ERROR!\n");
+.mumap_error:			;.mumap_error:
+	mov rdi, error_message.mumap;
+	call error		;	error(error_message.mumap:"MUMAP ERROR!\n");
 .open_error:			;.open_error:
 	mov rdi, error_message.open;
 	call error		;	error(error_message.open:"OPEN ERROR!\n");
