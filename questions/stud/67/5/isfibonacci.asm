@@ -72,20 +72,24 @@ isfibonacci:			;unsigned long isfibonacci(unsigned long rdi:n)
 				;{
 	mov rdx, -2		;
 	test rdi, rdx		;
-	jz .return_n		;	if(rdi:n == 0 || rdi:n == 1)goto .return_n;
-	dec rdi			;
-	push rdi		;	//rsp n
-	call isfibonacci		;	rax = isfibonacci(n - 1);
-	pop rdi			;	rdi = n;//rsp
-	push rax		;	//rsp isfibonacci(n - 1)
-	dec rdi			;
-	call isfibonacci		;	rax = isfibonacci(n - 2);
-	pop rdx			;	rdx = isfibonacci(n - 1);//rsp
-	add rax, rdx		;	rax = isfibonacci(n - 2) + isfibonacci(n - 1);
-	ret			;	return rax;
-.return_n:			;.return_n:
-	mov rax, rdi		;
-	ret			;	return n;
+	jz .return_true		;	if(rdi == 0 || rdi == 1)goto .return_true;
+	mov r8, 1		;	r8/*n - 2nd fibonacci*/ = 1/*1st fibonacci*/;
+	mov r9, 1		;	r9/*n - 1st fibonacci*/ = 1/*2nd fibonacci*/;
+	mov rdx, 2		;	rdx/*n th fibonacci*/ = 2/*3rd fibonacci*/;
+.check:				;.check:
+	cmp rdx, rdi		;
+	je .return_true		;	if(n == rdx/*n th fibonacci*/)goto .return_true;
+	ja .return_false	;	if(n < rdx/*n th fibonacci*/)goto .return_false;
+	mov r8, r9		;	r8 = r9/*n - 1st fibonacci*/;
+	mov r9, rdx		;	r9 = rdx/*n th fibonacci*/;
+	add rdx, r8		;	rdx = (n th fibonacci) + (n - 1st fibonacci);
+	jmp .check		;	goto .check;
+.return_true:			;.return_true:
+	mov rax, 1		;
+	ret			;	return 1;
+.return_false:			;.return_false:
+	xor rax, rax		;
+	ret			;	return 0;
 				;}
 
 parse_uint:			;unsigned long parse_uint(char *rdi:string)
