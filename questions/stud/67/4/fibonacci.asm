@@ -72,7 +72,7 @@ fibonacci:			;unsigned long fibonacci(unsigned long rdi:n)
 				;{
 	mov rdx, -2		;
 	test rdi, rdx		;
-	jz .return1		;	if(rdi:n == 0 || rdi:n == 1)goto .return1;
+	jz .return_n		;	if(rdi:n == 0 || rdi:n == 1)goto .return_n;
 	dec rdi			;
 	push rdi		;	//rsp n
 	call fibonacci		;	rax = fibonacci(n - 1);
@@ -83,9 +83,9 @@ fibonacci:			;unsigned long fibonacci(unsigned long rdi:n)
 	pop rdx			;	rdx = fibonacci(n - 1);//rsp
 	add rax, rdx		;	rax = fibonacci(n - 2) + fibonacci(n - 1);
 	ret			;	return rax;
-.return1:			;.return1:
-	mov rax, 1		;
-	ret			;	return 1;
+.return_n:			;.return_n:
+	mov rax, rdi		;
+	ret			;	return n;
 				;}
 
 parse_uint:			;unsigned long parse_uint(char *rdi:string)
