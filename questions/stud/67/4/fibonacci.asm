@@ -74,7 +74,9 @@ fibonacci:			;unsigned long fibonacci(unsigned long rdi:n)
 	test rdi, rdx		;
 	jz .return1		;	if(rdi:n == 0 || rdi:n == 1)goto .return1;
 	dec rdi			;
+	push rdi		;	//rsp n
 	call fibonacci		;	rax = fibonacci(n - 1);
+	pop rdi			;	rdi = n;//rsp
 	push rax		;	//rsp fibonacci(n - 1)
 	dec rdi			;
 	call fibonacci		;	rax = fibonacci(n - 2);
