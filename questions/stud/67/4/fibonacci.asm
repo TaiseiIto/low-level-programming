@@ -68,23 +68,22 @@ error:				;void error(char *rdi:error_message)
 	syscall			;	exit(rdi:1);
 				;}
 
-factorial:			;unsigned long factorial(unsigned long rdi:x)
+fibonacci:			;unsigned long fibonacci(unsigned long rdi:n)
 				;{
-	test rdi, rdi		;
-	jz .return_1		;	if(rdi:x == 0)goto .return_1;
-	sub rdi, 1		;	rdi:x -= 1;
-	call factorial		;	rax = factorial(rdi:(x - 1));
-	add rdi, 1		;	rdi:(x - 1) += 1;
-	mul rdi			;	(rdx:rax) = rax:factorial(x - 1) * rdi:x;
-	test rdx, rdx		;
-	jnz .too_big		;	if(rdx != 0)goto .too_big;
-	ret			;	return rax:(factorial(x));
-.return_1:			;.return_1:
+	mov rdx, -2		;
+	test rax, rdx		;
+	jz .return1		;	if(rdi:n == 0 || rdi:n == 1)goto .return1;
+	dec rdi			;
+	call fibonacci		;	rax = fibonacci(n - 1);
+	push rax		;	//rsp fibonacci(n - 1)
+	dec rdi			;
+	call fibonacci		;	rax = fibonacci(n - 2);
+	pop rdx			;	rdx = fibonacci(n - 1);//rsp
+	add rax, rdx		;	rax = fibonacci(n - 2) + fibonacci(n - 1);
+	ret			;	return rax;
+.return1:			;.return1:
 	mov rax, 1		;
 	ret			;	return 1;
-.too_big:			;.too_big:
-	mov rdi, error_message.too_big;
-	call error		;	error(error_message.too_big:"TOO BIG!\n");
 				;}
 
 parse_uint:			;unsigned long parse_uint(char *rdi:string)
@@ -230,12 +229,12 @@ _start:				;int main(void)
 .parse_uint:			;.parse_uint:
 	mov rdi, qword[rsp]	;
 	call parse_uint		;	rax = parse_uint(rdi/*mapped address*/);
-.factorial:			;.factorial:
+.fibonacci:			;.fibonacci:
 	mov rdi, rax		;
-	call factorial		;	rax = factorial(rdi/*parsed integer*/);
+	call fibonacci		;	rax = fibonacci(rdi/*parsed integer*/);
 .print_uint:			;.print_uint:
 	mov rdi, rax		;
-	call print_uint		;	print_uint(rdi/*factorial num*/);
+	call print_uint		;	print_uint(rdi/*fibonacci num*/);
 	call print_newline	;	print_newline();
 .mumap:				;.mumap:
 	mov rax, SYSCALL_MUMAP	;
