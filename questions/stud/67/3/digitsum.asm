@@ -53,6 +53,21 @@ stat:
 
 section .text
 
+digitsum:			;unsigned long digitsum(unsigned long rdi:n)
+				;{
+	xor r8, r8		;	r8/*digitsum*/ = 0;
+	mov r9, 10		;	r9/*divisor*/ = 10;
+	mov rax, rdi		;	rax/*dividend*/ = rdi:n;
+.divide:			;.divide:
+	xor rdx, rdx		;	rdx = 0;
+	div r9			;	(new rax) = (rdx:rax) / r9:10; (new rdx) = (rdx:rax) % r9:10;
+	add r8, rdx		;	r8/*digitsum*/ += rdx/*digit*/;
+	test rax, rax		;
+	jnz .divide		;	if(rax != 0)goto .divide;
+	mov rax, r8		;	rax = r8/*digitsum*/;
+	ret			;	return rax;
+				;}
+
 error:				;void error(char *rdi:error_message)
 				;{
 	push rdi		;	//rsp error_message
@@ -66,25 +81,6 @@ error:				;void error(char *rdi:error_message)
 	mov rax, SYSCALL_EXIT	;
 	mov rdi, 1		;	//return value
 	syscall			;	exit(rdi:1);
-				;}
-
-factorial:			;unsigned long factorial(unsigned long rdi:x)
-				;{
-	test rdi, rdi		;
-	jz .return_1		;	if(rdi:x == 0)goto .return_1;
-	sub rdi, 1		;	rdi:x -= 1;
-	call factorial		;	rax = factorial(rdi:(x - 1));
-	add rdi, 1		;	rdi:(x - 1) += 1;
-	mul rdi			;	(rdx:rax) = rax:factorial(x - 1) * rdi:x;
-	test rdx, rdx		;
-	jnz .too_big		;	if(rdx != 0)goto .too_big;
-	ret			;	return rax:(factorial(x));
-.return_1:			;.return_1:
-	mov rax, 1		;
-	ret			;	return 1;
-.too_big:			;.too_big:
-	mov rdi, error_message.too_big;
-	call error		;	error(error_message.too_big:"TOO BIG!\n");
 				;}
 
 parse_uint:			;unsigned long parse_uint(char *rdi:string)
@@ -230,9 +226,9 @@ _start:				;int main(void)
 .parse_uint:			;.parse_uint:
 	mov rdi, qword[rsp]	;
 	call parse_uint		;	rax = parse_uint(rdi/*mapped address*/);
-.factorial:			;.factorial:
+.digitsum:			;.digitsum:
 	mov rdi, rax		;
-	call factorial		;	rax = factorial(rdi/*parsed integer*/);
+	call digitsum		;	rax = digitsum(rdi/*parsed integer*/);
 .print_uint:			;.print_uint:
 	mov rdi, rax		;
 	call print_uint		;	print_uint(rdi/*factorial num*/);
