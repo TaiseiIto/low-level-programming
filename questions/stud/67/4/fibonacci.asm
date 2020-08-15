@@ -71,7 +71,7 @@ error:				;void error(char *rdi:error_message)
 fibonacci:			;unsigned long fibonacci(unsigned long rdi:n)
 				;{
 	mov rdx, -2		;
-	test rax, rdx		;
+	test rdi, rdx		;
 	jz .return1		;	if(rdi:n == 0 || rdi:n == 1)goto .return1;
 	dec rdi			;
 	call fibonacci		;	rax = fibonacci(n - 1);
